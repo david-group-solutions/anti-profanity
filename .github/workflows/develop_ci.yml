@@ -1,0 +1,86 @@
+name: Develop CI
+
+on:
+  push:
+    branches: [ "develop" ]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
+
+jobs:
+  test:
+    name: Tests on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ macos-26, ubuntu-latest, windows-latest ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+              8.0.x
+              9.0.x
+              10.0.x
+
+      - name: Test
+        working-directory: ./
+        run: dotnet test --logger:trx --logger:GitHubActions
+
+  publish:
+    name: Publish dev package
+    needs: [ test ]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    environment: dev
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+              8.0.x
+              9.0.x
+              10.0.x
+
+      - name: Clean package cache as a temporary workaround for https://github.com/actions/setup-dotnet/issues/155
+        working-directory: ./
+        run: dotnet clean -c Release && dotnet nuget locals all --clear
+
+      - name: Compute version info
+        id: version
+        run: |
+          prefix=$(xmllint --xpath "string(//Project/PropertyGroup/VersionPrefix)" Directory.Version.props)
+          branch="${{ github.head_ref || github.ref_name }}"
+          revision="${{ github.run_number }}"
+
+          short_branch="${branch:0:10}"
+          short_branch=$(echo "$short_branch" | sed 's/[^a-zA-Z0-9-]//g')
+
+          suffix="${short_branch}.${revision}"
+          echo "suffix=$suffix"           >> "$GITHUB_OUTPUT"
+
+          echo "Package version prefix is $prefix"
+          echo "Package version suffix is $suffix"
+          echo "Package version is $prefix-$suffix"
+
+      - name: Pack
+        run: dotnet pack -c Release --version-suffix="${{ steps.version.outputs.suffix }}" /p:ContinuousIntegrationBuild=true
+
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: DavidGroupSolutions
+
+      - name: Publish package to NuGet.org
+        run: dotnet nuget push **/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json

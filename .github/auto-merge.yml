@@ -1,0 +1,16 @@
+updateBranch: true
+deleteBranchAfterMerge: true
+reportStatus: true
+
+minApprovals:
+  MEMBER: 1
+maxRequestedChanges:
+  NONE: 0
+blockingLabels:
+  - blocked
+
+rules:
+  - requiredLabels:
+      - merge
+    minApprovals:
+      MEMBER: 0

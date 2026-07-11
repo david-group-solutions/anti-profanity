@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  release:
+    types: [ published ]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    environment: release
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+              8.0.x
+              9.0.x
+              10.0.x
+
+      - name: Clean package cache as a temporary workaround for https://github.com/actions/setup-dotnet/issues/155
+        working-directory: ./
+        run: dotnet clean -c Release && dotnet nuget locals all --clear
+
+      - name: Pack
+        working-directory: ./
+        run: dotnet pack -c Release -o out /p:ContinuousIntegrationBuild=true
+
+      - name: Upload .nupkg to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} out/*.nupkg --clobber
+
+      - name: Upload .snupkg to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} out/*.snupkg --clobber
+
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: DavidGroupSolutions
+
+      - name: Publish package to NuGet.org
+        run: dotnet nuget push **/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json

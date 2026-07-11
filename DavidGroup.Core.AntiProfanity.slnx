@@ -1,0 +1,22 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/DavidGroup.Core.AntiProfanity.Benchmarks/DavidGroup.Core.AntiProfanity.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Version.props" />
+    <File Path="global.json" />
+    <File Path="NuGet.Config" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/DavidGroup.Core.AntiProfanity/DavidGroup.Core.AntiProfanity.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DavidGroup.Core.AntiProfanity.Tests/DavidGroup.Core.AntiProfanity.Tests.csproj" />
+  </Folder>
+</Solution>

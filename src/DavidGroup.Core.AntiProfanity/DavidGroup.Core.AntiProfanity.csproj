@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
+    <AssemblyVersion>$(VersionPrefix.Substring(0,3)).0.0</AssemblyVersion>
+
+    <Company>David Group Solutions</Company>
+    <Product>AntiProfanity</Product>
+    <Description>Detects profanity in text using predefined word lists in advanced JSON or simple TXT formats.</Description>
+    <Authors>David Khachatryan; David Group Solutions</Authors>
+    <Copyright>Copyright (c) 2025-2026 David Khachatryan (David Group Solutions)</Copyright>
+
+    <PackageId>DavidGroup.Core.AntiProfanity</PackageId>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageTags>AntiProfanity;Profanity;Detection;Analyzer;Helpers;Utilities;Kit;Instrumentation</PackageTags>
+    <PackageProjectUrl>https://github.com/david-group-solutions/anti-profanity</PackageProjectUrl>
+
+    <RepositoryUrl>https://github.com/david-group-solutions/anti-profanity</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../assets/icon.png" Pack="true" Visible="false" PackagePath="/"/>
+    <None Include="../../README.md" Pack="true" Visible="true" PackagePath="/"/>
+    <None Include="../../LICENSE.txt" Pack="true" Visible="true" PackagePath="/"/>
+  </ItemGroup>
+
+  <ItemGroup>
+  </ItemGroup>
+
+  <!-- Per-TFM `ItemGroup` for exceptions only: -->
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+  </ItemGroup>
+
+</Project>

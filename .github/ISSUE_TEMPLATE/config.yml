@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+
+contact_links:
+  # - name: 📖 Documentation
+  #   url: https://docs.example.com
+  #   about: Check the docs before opening an issue — your question may already be answered!
+  - name: 💬 Community Discussions
+    url: https://github.com/david-group-solutions/anti-profanity/discussions
+    about: Ask questions, share ideas, and connect with the community.

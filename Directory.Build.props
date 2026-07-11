@@ -1,0 +1,34 @@
+<!-- Properties in this file are expected to be identical for all "David Group Solutions" organization projects. If
+ a property value is project-specific, please record it in the "*.csproj" file instead. -->
+
+<Project>
+
+    <Import Project="$(MSBuildThisFileDirectory)Directory.Version.props"/>
+
+    <PropertyGroup>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+
+        <GenerateDocumentationFile Condition="!$(MSBuildProjectName.EndsWith('Tests'))">true</GenerateDocumentationFile>
+
+        <SignAssembly Condition="Exists('$(MSBuildThisFileDirectory)assets/DavidGroupSolutions.snk')">true</SignAssembly>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)assets/DavidGroupSolutions.snk</AssemblyOriginatorKeyFile>
+
+        <!-- Enable debugging and diagnostics with Source Link. See these for more information:
+        https://learn.microsoft.com/en-us/visualstudio/debugger/how-to-improve-diagnostics-debugging-with-sourcelink?view=visualstudio
+        https://learn.microsoft.com/en-us/nuget/create-packages/symbol-packages-snupkg -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+        <Reference Include="System"/>
+        <Reference Include="System.Core"/>
+        <Reference Include="Microsoft.CSharp"/>
+    </ItemGroup>
+
+</Project>

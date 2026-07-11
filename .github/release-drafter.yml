@@ -1,0 +1,50 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+categories:
+  - title: "🚀 Features"
+    when:
+      labels:
+        - "feature"
+        - "enhancement"
+  - title: "🐛 Bug Fixes"
+    when:
+      - labels:
+          - "bug"
+          - "fix"
+          - "bugfix"
+      - labels:
+          - "regression"
+  - title: '🛠️ Maintenance'
+    when:
+      - labels:
+          - "chore"
+  - title: '⚠️ Breaking changes'
+    when:
+      - labels:
+          - "breaking-change"
+  - title: '🐌 Performance'
+    when:
+      - labels:
+          - "performance"
+  - type: "pre-exclude"
+    when:
+      label: "skip-changelog"
+
+change-template: | 
+  - ### $TITLE @$AUTHOR (#$NUMBER)
+    $BODY
+    
+  
+template: |
+  # 🎉 DavidGroup.Core.AntiProfanity $RESOLVED_VERSION
+
+  Detects profanity in text using predefined word lists in advanced JSON or simple TXT formats.
+
+  ## Changes
+
+  $CHANGES
+  
+  ### Contributors
+
+  $CONTRIBUTORS
