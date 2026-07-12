@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DavidGroup.Core.AntiProfanity\DavidGroup.Core.AntiProfanity.csproj"/>
+    <ProjectReference Include="..\..\src\DavidGroup.Content.AntiProfanity\DavidGroup.Content.AntiProfanity.csproj"/>
   </ItemGroup>
 
   <!-- Per-TFM `ItemGroup` for exceptions only: -->

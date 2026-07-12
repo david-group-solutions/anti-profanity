@@ -1,6 +1,6 @@
-# DavidGroup.Core.AntiProfanity
+# DavidGroup.Content.AntiProfanity
 
-#### [![Release](https://github.com/david-group-solutions/anti-profanity/actions/workflows/release.yml/badge.svg)](https://github.com/david-group-solutions/anti-profanity/actions/workflows/release.yml) [![Nuget](https://img.shields.io/nuget/v/DavidGroup.Core.AntiProfanity)](https://www.nuget.org/packages/DavidGroup.Core.AntiProfanity/)
+#### [![Release](https://github.com/david-group-solutions/anti-profanity/actions/workflows/release.yml/badge.svg)](https://github.com/david-group-solutions/anti-profanity/actions/workflows/release.yml) [![Nuget](https://img.shields.io/nuget/v/DavidGroup.Content.AntiProfanity)](https://www.nuget.org/packages/DavidGroup.Content.AntiProfanity/)
 
 Detects profanity in text using predefined word lists in advanced JSON or simple TXT formats.
 
@@ -13,13 +13,13 @@ Detects profanity in text using predefined word lists in advanced JSON or simple
 Using the .NET CLI:
 
 ```bash
-dotnet add package DavidGroup.Core.AntiProfanity
+dotnet add package DavidGroup.Content.AntiProfanity
 ```
 
 Or via the Package Manager Console:
 
 ```bash
-Install-Package DavidGroup.Core.AntiProfanity
+Install-Package DavidGroup.Content.AntiProfanity
 ```
 
 ### How to use it?

@@ -5,7 +5,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/benchmarks/">
-    <Project Path="benchmarks/DavidGroup.Core.AntiProfanity.Benchmarks/DavidGroup.Core.AntiProfanity.Benchmarks.csproj" />
+    <Project Path="benchmarks/DavidGroup.Content.AntiProfanity.Benchmarks/DavidGroup.Content.AntiProfanity.Benchmarks.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
@@ -14,9 +14,9 @@
     <File Path="NuGet.Config" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/DavidGroup.Core.AntiProfanity/DavidGroup.Core.AntiProfanity.csproj" />
+    <Project Path="src/DavidGroup.Content.AntiProfanity/DavidGroup.Content.AntiProfanity.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/DavidGroup.Core.AntiProfanity.Tests/DavidGroup.Core.AntiProfanity.Tests.csproj" />
+    <Project Path="tests/DavidGroup.Content.AntiProfanity.Tests/DavidGroup.Content.AntiProfanity.Tests.csproj" />
   </Folder>
 </Solution>
