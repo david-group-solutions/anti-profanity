@@ -23,9 +23,9 @@ public class Profanity
     public bool PartialMatch { get; init; } = true;
 
     /// <summary>
-    /// Severity level. See <see cref="SeverityLevel"/> enum for more information.
+    /// Severity level. See <see cref="ProfanitySeverityLevel"/> enum for more information.
     /// </summary>
-    public SeverityLevel Severity { get; init; }
+    public ProfanitySeverityLevel Severity { get; init; }
 
     /// <summary>
     /// Associated tags representing the category.

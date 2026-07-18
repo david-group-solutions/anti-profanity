@@ -1,13 +1,17 @@
+using DavidGroup.Content.AntiProfanity.DataSources;
 using DavidGroup.Content.AntiProfanity.DataSources.Implementations;
 using DavidGroup.Content.AntiProfanity.Models;
 
 namespace DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 
-internal sealed class ProfanityDetectionTxtHandler(ProfanityTxtDataSource dataSource) : IProfanityDetectionHandler
+internal sealed class ProfanityDetectionTxtHandler(IEnumerable<IProfanityDataSource> dataSources)
+    : IProfanityDetectionHandler
 {
+    private readonly ProfanityTxtDataSource _dataSource = dataSources.OfType<ProfanityTxtDataSource>().Single();
+
     public Task DetectAsync(ProfanityDetectionContext context, NextProfanityDetectionHandlerDelegate? next)
     {
-        foreach (string profanity in dataSource.Profanities)
+        foreach (string profanity in _dataSource.Profanities.OrderByDescending(x => x.Length))
         {
             int searchStart = 0;
             while (searchStart <= context.Content.Length - profanity.Length)

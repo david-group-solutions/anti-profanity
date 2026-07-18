@@ -5,37 +5,41 @@ using DavidGroup.Content.AntiProfanity.Models;
 
 namespace DavidGroup.Content.AntiProfanity.DataSources.Implementations;
 
-internal class ProfanityJsonDataSource : IProfanityDataSource
+internal sealed class ProfanityJsonDataSource : IProfanityDataSource
 {
     public FrozenSet<Profanity> Profanities { get; private set; } = null!;
 
     public bool CanLoad(string extension) => extension == ".json";
 
-    public async Task LoadAsync(
-        string path,
-        CancellationToken cancellationToken = default)
+    public async Task LoadAsync(IEnumerable<string> paths, CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(paths);
 
-        if (!File.Exists(path))
-            throw new FileNotFoundException($"The file '{path}' was not found.");
+        string[] pathArray = paths as string[] ?? paths.ToArray();
 
-        await using FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        string[] missing = pathArray.Where(p => !File.Exists(p)).ToArray();
+        if (missing.Length > 0)
+            throw new FileNotFoundException($"The file(s) '{string.Join(", ", missing)}' were not found.");
 
         List<Profanity> profanities = [];
-        try
+        foreach (string path in pathArray)
         {
-            await foreach (Profanity? profanity in JsonSerializer
-                               .DeserializeAsyncEnumerable<Profanity>(fs, JsonSerializerOptions, cancellationToken)
-                               .ConfigureAwait(false))
+            await using FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            try
             {
-                if (profanity is not null)
-                    profanities.Add(profanity);
+                await foreach (Profanity? profanity in JsonSerializer
+                                   .DeserializeAsyncEnumerable<Profanity>(fs, JsonSerializerOptions, cancellationToken)
+                                   .ConfigureAwait(false))
+                {
+                    if (profanity is not null)
+                        profanities.Add(profanity);
+                }
             }
-        }
-        catch (JsonException ex)
-        {
-            throw new InvalidDataException($"Failed to parse profanity data from '{path}'.", ex);
+            catch (JsonException ex)
+            {
+                throw new InvalidDataException($"Failed to parse profanity data from '{path}'.", ex);
+            }
         }
 
         Profanities = profanities.ToFrozenSet();

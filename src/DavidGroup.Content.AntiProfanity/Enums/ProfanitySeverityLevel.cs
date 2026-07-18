@@ -3,7 +3,7 @@ namespace DavidGroup.Content.AntiProfanity.Enums;
 /// <summary>
 /// Represents the severity level of detected profanity.
 /// </summary>
-public enum SeverityLevel
+public enum ProfanitySeverityLevel
 {
     /// <summary>
     /// Not specified.

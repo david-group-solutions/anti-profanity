@@ -7,11 +7,18 @@ using DavidGroup.Content.AntiProfanity.Pipeline;
 
 namespace DavidGroup.Content.AntiProfanity.Services;
 
+/// <summary>
+/// Default implementation of <see cref="IAntiProfanityService"/>.
+/// </summary>
+/// <param name="pipeline">
+/// The profanity detection pipeline used to analyze text.
+/// </param>
 public class AntiProfanityService(IProfanityDetectionPipeline pipeline) : IAntiProfanityService
 {
+    /// <inheritdoc />
     public async Task<ReadOnlyCollection<ProfanityOccurrence>> DetectAsync(
         string text,
-        SeverityLevel severityLevel = SeverityLevel.NotSpecified)
+        ProfanitySeverityLevel severityLevel = ProfanitySeverityLevel.NotSpecified)
     {
         ProfanityDetectionContext context = new()
         {
@@ -24,17 +31,18 @@ public class AntiProfanityService(IProfanityDetectionPipeline pipeline) : IAntiP
         return context.Occurrences.AsReadOnly();
     }
 
+    /// <inheritdoc />
     public async Task<string> CensorAsync(
         string text,
-        SeverityLevel severityLevel = SeverityLevel.NotSpecified,
+        ProfanitySeverityLevel severityLevel = ProfanitySeverityLevel.NotSpecified,
         char censorCharacter = '*')
     {
         IReadOnlyList<ProfanityOccurrence> occurrences = await DetectAsync(text, severityLevel);
 
         return occurrences.Aggregate(text, (current, detection)
             => current[..detection.StartIndex] +
-               Enumerable.Repeat(censorCharacter, detection.EndIndex - detection.StartIndex) +
-               current[detection.EndIndex..]
+               new string(censorCharacter, detection.EndIndex - detection.StartIndex + 1) +
+               current[(detection.EndIndex + 1)..]
         );
     }
 }

@@ -2,24 +2,26 @@ using System.Collections.Frozen;
 
 namespace DavidGroup.Content.AntiProfanity.DataSources.Implementations;
 
-internal class ProfanityTxtDataSource : IProfanityDataSource
+internal sealed class ProfanityTxtDataSource : IProfanityDataSource
 {
     public FrozenSet<string> Profanities { get; private set; } = null!;
 
     public bool CanLoad(string extension) => extension == ".txt";
 
-    public Task LoadAsync(string path, CancellationToken cancellationToken = default)
+    public Task LoadAsync(IEnumerable<string> paths, CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(paths);
 
-        if (!File.Exists(path))
-            throw new FileNotFoundException($"The file '{path}' was not found.");
+        string[] pathArray = paths as string[] ?? paths.ToArray();
 
-        Profanities = File
-            .ReadLines(path)
+        string[] missing = pathArray.Where(p => !File.Exists(p)).ToArray();
+        if (missing.Length > 0)
+            throw new FileNotFoundException($"The file(s) '{string.Join(", ", missing)}' were not found.");
+
+        Profanities = pathArray
+            .SelectMany(File.ReadLines)
             .Where(line => !string.IsNullOrWhiteSpace(line))
             .Select(line => line.Trim())
-            .OrderByDescending(line => line.Length)
             .ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
         return Task.CompletedTask;

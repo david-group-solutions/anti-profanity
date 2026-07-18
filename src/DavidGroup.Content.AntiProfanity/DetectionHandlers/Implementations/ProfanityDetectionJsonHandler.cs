@@ -1,16 +1,19 @@
 using System.Text.RegularExpressions;
 
+using DavidGroup.Content.AntiProfanity.DataSources;
 using DavidGroup.Content.AntiProfanity.DataSources.Implementations;
 using DavidGroup.Content.AntiProfanity.Models;
 
 namespace DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 
-internal sealed class ProfanityDetectionJsonHandler(ProfanityJsonDataSource dataSource)
+internal sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSource> dataSources)
     : IProfanityDetectionHandler
 {
+    private readonly ProfanityJsonDataSource _dataSource = dataSources.OfType<ProfanityJsonDataSource>().Single();
+
     public Task DetectAsync(ProfanityDetectionContext context, NextProfanityDetectionHandlerDelegate? next)
     {
-        foreach (Profanity profanity in dataSource.Profanities)
+        foreach (Profanity profanity in _dataSource.Profanities)
         {
             if (profanity.Severity < context.SeverityLevel)
                 continue;
@@ -24,23 +27,26 @@ internal sealed class ProfanityDetectionJsonHandler(ProfanityJsonDataSource data
             {
                 bool isException = false;
 
-                string word = GetEnclosingWord(context.Content, match);
-
-                foreach (string exception in profanity.Exceptions)
+                if (profanity.Exceptions.Count != 0)
                 {
-                    string exceptionPattern = string.Concat(
-                        "^", Regex.Escape(exception).Replace(@"\*", @"\w*"), "$");
+                    string word = GetEnclosingWord(context.Content, match);
 
-                    if (Regex.IsMatch(word, exceptionPattern, RegexOptions.IgnoreCase))
+                    foreach (string exception in profanity.Exceptions)
                     {
-                        isException = true;
-                        break;
+                        string exceptionPattern = string.Concat(
+                            "^", Regex.Escape(exception).Replace(@"\*", @"\w*"), "$");
+
+                        if (Regex.IsMatch(word, exceptionPattern, RegexOptions.IgnoreCase))
+                        {
+                            isException = true;
+                            break;
+                        }
                     }
                 }
 
                 if (!isException)
                     context.Occurrences.Add(
-                        new ProfanityOccurrence(profanity.Id, match.Index, match.Index + match.Length - 1));
+                        new ProfanityOccurrence(profanity.Id, match.Index, match.Index + match.Length - 1, profanity));
             }
         }
 
