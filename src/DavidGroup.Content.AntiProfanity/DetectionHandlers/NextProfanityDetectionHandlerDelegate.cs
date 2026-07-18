@@ -1,0 +1,3 @@
+namespace DavidGroup.Content.AntiProfanity.DetectionHandlers;
+
+public delegate Task NextProfanityDetectionHandlerDelegate(ProfanityDetectionContext context);
