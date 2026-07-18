@@ -7,6 +7,9 @@
   <Folder Name="/benchmarks/">
     <Project Path="benchmarks/DavidGroup.Content.AntiProfanity.Benchmarks/DavidGroup.Content.AntiProfanity.Benchmarks.csproj" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/DavidGroup.Content.AntiProfanity.Samples.WebApi/DavidGroup.Content.AntiProfanity.Samples.WebApi.csproj" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
     <File Path="Directory.Version.props" />
