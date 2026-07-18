@@ -9,11 +9,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10"/>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DavidGroup.Content.AntiProfanity\DavidGroup.Content.AntiProfanity.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\ProfanityDataSources\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
