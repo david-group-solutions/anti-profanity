@@ -30,10 +30,64 @@ New samples are added continuously as more features are developed.
 
 ## 📦 Key Features
 
-### TODO: Coming soon
+### Registration
+
+#### Program.sc
 
 ```csharp
-// TODO: Coming soon
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddAntiProfanity(builder.Configuration, Assembly.GetExecutingAssembly());
+
+WebApplication app = builder.Build();
+
+await app.Services.InitializeAntiProfanityDataSourcesAsync();
+
+app.Run();
+```
+
+#### appsettings.json
+
+```json
+{
+    "AntiProfanity": {
+        "DataSourcesBasePath": "Data/ProfanityDataSources",
+        "DataSources": [
+            "en.json",
+            "ru.txt"
+        ]
+    }
+}
+```
+
+---
+
+### Detection & Censoring
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class AntiProfanityController(IAntiProfanityService antiProfanityService) : ControllerBase
+{
+    [HttpPost("detect")]
+    public async Task<IActionResult> Detect([FromBody] DetectionsRequestDto dto)
+    {
+        ReadOnlyCollection<ProfanityOccurrence> detections =
+            await antiProfanityService.DetectAsync(dto.Text, dto.SeverityLevel);
+
+        return Ok(detections);
+    }
+
+    [HttpPost("censor")]
+    public async Task<IActionResult> Censor([FromBody] CensorRequestDto dto)
+    {
+        string censored =
+            await antiProfanityService.CensorAsync(dto.Text, dto.SeverityLevel, dto.CensorChar);
+
+        return Ok(censored);
+    }
+}
+
 ```
 
 ## 🤝 Contributing
