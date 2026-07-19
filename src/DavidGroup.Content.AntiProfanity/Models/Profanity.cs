@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using DavidGroup.Content.AntiProfanity.Enums;
 
 namespace DavidGroup.Content.AntiProfanity.Models;
@@ -36,4 +38,42 @@ public class Profanity
     /// Any exceptions specified in the same format as <see cref="Match"/> will be excluded from result.
     /// </summary>
     public List<string> Exceptions { get; init; } = [];
+
+    /// <summary>
+    /// Complied <see cref="Match"/> pattern.
+    /// </summary>
+    public Regex MatchRegex { get; private set; } = null!;
+
+    /// <summary>
+    /// Complied <see cref="ExceptionRegexes"/> patterns.
+    /// </summary>
+    public List<Regex> ExceptionRegexes { get; } = [];
+
+    /// <summary>
+    /// Pre-complies resources once when loading data source.
+    /// </summary>
+    public void PrecompileValues()
+    {
+        string pattern = Match.Replace("*", "+");
+        if (!PartialMatch)
+            pattern = string.Concat(@"\b(", pattern, @")\b");
+
+        MatchRegex = new Regex(pattern,
+            RegexOptions.Compiled |
+            RegexOptions.IgnoreCase |
+            RegexOptions.CultureInvariant
+        );
+
+        foreach (string exceptionPattern in Exceptions.Select(exception => string.Concat(
+                     "^", Regex.Escape(exception).Replace(@"\*", @"\w*"), "$")))
+        {
+            ExceptionRegexes.Add(
+                new Regex(exceptionPattern,
+                    RegexOptions.Compiled |
+                    RegexOptions.IgnoreCase |
+                    RegexOptions.CultureInvariant
+                )
+            );
+        }
+    }
 }

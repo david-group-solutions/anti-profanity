@@ -33,7 +33,10 @@ internal sealed class ProfanityJsonDataSource : IProfanityDataSource
                                    .ConfigureAwait(false))
                 {
                     if (profanity is not null)
+                    {
+                        profanity.PrecompileValues();
                         profanities.Add(profanity);
+                    }
                 }
             }
             catch (JsonException ex)

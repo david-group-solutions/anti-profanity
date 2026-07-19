@@ -37,12 +37,17 @@ public class AntiProfanityService(IProfanityDetectionPipeline pipeline) : IAntiP
         ProfanitySeverityLevel severityLevel = ProfanitySeverityLevel.NotSpecified,
         char censorCharacter = '*')
     {
-        IReadOnlyList<ProfanityOccurrence> occurrences = await DetectAsync(text, severityLevel);
+        ReadOnlyCollection<ProfanityOccurrence> occurrences = await DetectAsync(text, severityLevel);
 
-        return occurrences.Aggregate(text, (current, detection)
-            => current[..detection.StartIndex] +
-               new string(censorCharacter, detection.EndIndex - detection.StartIndex + 1) +
-               current[(detection.EndIndex + 1)..]
-        );
+        return string.Create(text.Length, (text, occurrences, censorCharacter), (span, state) =>
+        {
+            state.text.AsSpan().CopyTo(span);
+
+            foreach (ProfanityOccurrence occurrence in state.occurrences)
+            {
+                span.Slice(occurrence.StartIndex, occurrence.EndIndex - occurrence.StartIndex + 1)
+                    .Fill(state.censorCharacter);
+            }
+        });
     }
 }

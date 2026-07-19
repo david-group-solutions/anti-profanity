@@ -18,25 +18,17 @@ internal sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSo
             if (profanity.Severity < context.SeverityLevel)
                 continue;
 
-            string pattern = profanity.Match.Replace("*", "+");
-            if (!profanity.PartialMatch)
-                pattern = string.Concat(@"\b(", pattern, @")\b");
-
-            MatchCollection matches = Regex.Matches(context.Content, pattern, RegexOptions.IgnoreCase);
-            foreach (Match match in matches)
+            foreach (ValueMatch match in profanity.MatchRegex.EnumerateMatches(context.Content))
             {
                 bool isException = false;
 
                 if (profanity.Exceptions.Count != 0)
                 {
-                    string word = GetEnclosingWord(context.Content, match);
+                    ReadOnlySpan<char> word = GetEnclosingWord(context.Content, match);
 
-                    foreach (string exception in profanity.Exceptions)
+                    foreach (Regex exception in profanity.ExceptionRegexes)
                     {
-                        string exceptionPattern = string.Concat(
-                            "^", Regex.Escape(exception).Replace(@"\*", @"\w*"), "$");
-
-                        if (Regex.IsMatch(word, exceptionPattern, RegexOptions.IgnoreCase))
+                        if (exception.IsMatch(word))
                         {
                             isException = true;
                             break;
@@ -54,7 +46,7 @@ internal sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSo
         return Task.CompletedTask;
     }
 
-    private static string GetEnclosingWord(string content, Match match)
+    private static ReadOnlySpan<char> GetEnclosingWord(string content, ValueMatch match)
     {
         int start = match.Index;
         while (start > 0 && (char.IsLetter(content[start - 1]) || char.IsDigit(content[start - 1])))
@@ -64,6 +56,6 @@ internal sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSo
         while (end < content.Length && (char.IsLetter(content[end]) || char.IsDigit(content[end])))
             end++;
 
-        return content.Substring(start, end - start);
+        return content.AsSpan(start, end - start);
     }
 }
