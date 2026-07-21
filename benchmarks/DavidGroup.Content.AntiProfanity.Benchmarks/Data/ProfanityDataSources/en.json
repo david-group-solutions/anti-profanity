@@ -158,7 +158,6 @@
   {
     "id": "ass",
     "match": "ass",
-    "partialMatch": false,
     "tags": [
       "sexual"
     ],
@@ -1203,7 +1202,6 @@
   {
     "id": "cum",
     "match": "cum",
-    "partialMatch": false,
     "tags": [
       "sexual"
     ],

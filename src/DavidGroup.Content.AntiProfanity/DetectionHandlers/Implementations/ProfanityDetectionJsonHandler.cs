@@ -44,7 +44,7 @@ public sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSour
 
                 if (profanity.Exceptions.Count != 0)
                 {
-                    ReadOnlySpan<char> word = GetEnclosingWord(context.Content, match);
+                    ReadOnlySpan<char> word = context.Content.AsSpan(match.Index, match.Length);
 
                     foreach (Regex exception in profanity.ExceptionRegexes)
                     {
@@ -63,26 +63,5 @@ public sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSour
         }
 
         return next.Invoke(context);
-    }
-
-    /// <summary>
-    /// Gets the complete word that encloses the specified regex match.
-    /// </summary>
-    /// <param name="content">The text containing the match.</param>
-    /// <param name="match">The regex match.</param>
-    /// <returns>
-    /// A span representing the entire word that contains the match.
-    /// </returns>
-    private static ReadOnlySpan<char> GetEnclosingWord(string content, ValueMatch match)
-    {
-        int start = match.Index;
-        while (start > 0 && char.IsLetterOrDigit(content[start - 1]))
-            start--;
-
-        int end = match.Index + match.Length;
-        while (end < content.Length && char.IsLetterOrDigit(content[end]))
-            end++;
-
-        return content.AsSpan(start, end - start);
     }
 }

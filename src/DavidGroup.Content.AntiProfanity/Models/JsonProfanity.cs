@@ -20,11 +20,6 @@ public class JsonProfanity
     /// </summary>
     public string Match { get; init; } = null!;
 
-    /// Indicates whether partial matching is enabled.
-    /// If <see langword="false"/>, only whole words are matched.
-    /// If <see langword="true"/>, the <see cref="Match"/> value can match anywhere within a word.
-    public bool PartialMatch { get; init; } = true;
-
     /// <summary>
     /// Severity level. See <see cref="ProfanitySeverityLevel"/> enum for more information.
     /// </summary>
@@ -57,9 +52,7 @@ public class JsonProfanity
     /// </summary>
     public void PrecompileValues()
     {
-        string pattern = Match.Replace("*", "+");
-        if (!PartialMatch)
-            pattern = string.Concat(@"\b(", pattern, @")\b");
+        string pattern = string.Concat(@"\b(", Match.Replace("*", "+"), @")\b");
 
         MatchRegex = new Regex(pattern,
             RegexOptions.Compiled |

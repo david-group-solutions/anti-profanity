@@ -172,7 +172,6 @@ public static class ProfanityJsonDataSourceTests
                                   {
                                     "Id": "1",
                                     "Match": "badword",
-                                    "PartialMatch": true,
                                     "Severity": 1,
                                     "Tags": ["profanity"],
                                     "Exceptions": []
@@ -201,7 +200,6 @@ public static class ProfanityJsonDataSourceTests
                                   {
                                     "id": "1",
                                     "match": "badword",
-                                    "partialmatch": true,
                                     "severity": 1,
                                     "tags": [],
                                     "exceptions": []

@@ -33,59 +33,6 @@ public static class JsonProfanityTests
         }
 
         [Fact]
-        public void PrecompileValues_PartialMatchTrue_MatchRegexMatchesSubstringWithinLargerWord()
-        {
-            // Arrange
-            JsonProfanity profanity = new()
-            {
-                Match = "ass",
-                PartialMatch = true
-            };
-
-            // Act
-            profanity.PrecompileValues();
-
-            // Assert
-            Assert.Matches(profanity.MatchRegex, "class");
-            Assert.Matches(profanity.MatchRegex, "ass");
-        }
-
-        [Fact]
-        public void PrecompileValues_PartialMatchFalse_MatchRegexDoesNotMatchSubstringWithinLargerWord()
-        {
-            // Arrange
-            JsonProfanity profanity = new()
-            {
-                Match = "ass",
-                PartialMatch = false
-            };
-
-            // Act
-            profanity.PrecompileValues();
-
-            // Assert
-            Assert.DoesNotMatch(profanity.MatchRegex, "class");
-        }
-
-        [Fact]
-        public void PrecompileValues_PartialMatchFalse_MatchRegexMatchesStandaloneWholeWord()
-        {
-            // Arrange
-            JsonProfanity profanity = new()
-            {
-                Match = "ass",
-                PartialMatch = false
-            };
-
-            // Act
-            profanity.PrecompileValues();
-
-            // Assert
-            Assert.Matches(profanity.MatchRegex, "ass");
-            Assert.Matches(profanity.MatchRegex, "my ass hurts");
-        }
-
-        [Fact]
         public void PrecompileValues_MatchContainsPipeSeparatedValues_MatchesEitherAlternative()
         {
             // Arrange

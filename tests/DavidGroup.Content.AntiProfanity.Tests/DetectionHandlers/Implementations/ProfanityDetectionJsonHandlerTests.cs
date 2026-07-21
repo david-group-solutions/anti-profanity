@@ -97,7 +97,7 @@ public static class ProfanityDetectionJsonHandlerTests
         {
             // Arrange
             const string json = """
-                                [ { "Id": "p1", "Match": "badword", "PartialMatch": true, "Severity": 1 } ]
+                                [ { "Id": "p1", "Match": "badword", "Severity": 1 } ]
                                 """;
             ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
 
@@ -193,7 +193,7 @@ public static class ProfanityDetectionJsonHandlerTests
         {
             // Arrange
             const string json = """
-                                [ { "Id": "p1", "Match": "ass", "PartialMatch": true, "Severity": 1, "Exceptions": ["class*"] } ]
+                                [ { "Id": "p1", "Match": "ass", "Severity": 1, "Exceptions": ["class*"] } ]
                                 """;
             ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
 
@@ -215,7 +215,7 @@ public static class ProfanityDetectionJsonHandlerTests
         {
             // Arrange
             const string json = """
-                                [ { "Id": "p1", "Match": "ass", "PartialMatch": true, "Severity": 1, "Exceptions": ["class*"] } ]
+                                [ { "Id": "p1", "Match": "ass", "Severity": 1, "Exceptions": ["class*"] } ]
                                 """;
             ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
 
@@ -241,7 +241,7 @@ public static class ProfanityDetectionJsonHandlerTests
         {
             // Arrange
             const string json = """
-                                [ { "Id": "p1", "Match": "cat", "PartialMatch": true, "Severity": 1 } ]
+                                [ { "Id": "p1", "Match": "cat", "Severity": 1 } ]
                                 """;
             ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
 
