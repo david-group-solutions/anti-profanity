@@ -6,14 +6,34 @@ using DavidGroup.Content.AntiProfanity.Models;
 
 namespace DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 
-internal sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSource> dataSources)
+/// <summary>
+/// A profanity detection handler that detects profanities defined in a
+/// <see cref="ProfanityJsonDataSource"/> using regular expressions.
+/// </summary>
+/// <param name="dataSources">
+/// The collection of registered profanity data sources.
+/// </param>
+public sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSource> dataSources)
     : IProfanityDetectionHandler
 {
     private readonly ProfanityJsonDataSource _dataSource = dataSources.OfType<ProfanityJsonDataSource>().Single();
 
-    public Task DetectAsync(ProfanityDetectionContext context, NextProfanityDetectionHandlerDelegate? next)
+    /// <summary>
+    /// Detects profanities in the specified text using the configured JSON data source
+    /// and appends all detected occurrences to the provided context.
+    /// </summary>
+    /// <param name="context">
+    /// The context containing the input and state used during profanity detection.
+    /// </param>
+    /// <param name="next">
+    /// The delegate that invokes the next handler in the pipeline.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous detection operation.
+    /// </returns>
+    public Task DetectAsync(ProfanityDetectionContext context, NextProfanityDetectionHandlerDelegate next)
     {
-        foreach (Profanity profanity in _dataSource.Profanities)
+        foreach (JsonProfanity profanity in _dataSource.Profanities)
         {
             if (profanity.Severity < context.SeverityLevel)
                 continue;
@@ -38,22 +58,29 @@ internal sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSo
 
                 if (!isException)
                     context.Occurrences.Add(
-                        new ProfanityOccurrence(profanity.Id, match.Index, match.Index + match.Length - 1, profanity));
+                        new ProfanityOccurrence(profanity.Id, match.Index, match.Length, profanity));
             }
         }
 
-        next?.Invoke(context);
-        return Task.CompletedTask;
+        return next.Invoke(context);
     }
 
+    /// <summary>
+    /// Gets the complete word that encloses the specified regex match.
+    /// </summary>
+    /// <param name="content">The text containing the match.</param>
+    /// <param name="match">The regex match.</param>
+    /// <returns>
+    /// A span representing the entire word that contains the match.
+    /// </returns>
     private static ReadOnlySpan<char> GetEnclosingWord(string content, ValueMatch match)
     {
         int start = match.Index;
-        while (start > 0 && (char.IsLetter(content[start - 1]) || char.IsDigit(content[start - 1])))
+        while (start > 0 && char.IsLetterOrDigit(content[start - 1]))
             start--;
 
         int end = match.Index + match.Length;
-        while (end < content.Length && (char.IsLetter(content[end]) || char.IsDigit(content[end])))
+        while (end < content.Length && char.IsLetterOrDigit(content[end]))
             end++;
 
         return content.AsSpan(start, end - start);

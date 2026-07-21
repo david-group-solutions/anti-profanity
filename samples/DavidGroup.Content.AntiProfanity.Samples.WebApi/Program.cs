@@ -1,7 +1,9 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 
+using DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 using DavidGroup.Content.AntiProfanity.Extensions;
+using DavidGroup.Content.AntiProfanity.Samples.WebApi.CustomAntiProfanity;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +12,10 @@ builder.Services.AddControllers()
 
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddAntiProfanity(builder.Configuration, Assembly.GetExecutingAssembly());
+builder.Services.AddAntiProfanity(builder.Configuration, Assembly.GetExecutingAssembly())
+    .AddHandler<ProfanityDetectionJsonHandler>()
+    .AddHandler<ProfanityDetectionTxtHandler>()
+    .AddHandler<ProfanityDetectionSimpleTxtHandler>();
 
 WebApplication app = builder.Build();
 

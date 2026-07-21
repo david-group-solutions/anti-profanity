@@ -7,29 +7,27 @@ namespace DavidGroup.Content.AntiProfanity.DataSources.Implementations;
 
 internal sealed class ProfanityJsonDataSource : IProfanityDataSource
 {
-    public FrozenSet<Profanity> Profanities { get; private set; } = null!;
+    public FrozenSet<JsonProfanity> Profanities { get; private set; } = null!;
 
     public bool CanLoad(string extension) => extension == ".json";
 
     public async Task LoadAsync(IEnumerable<string> paths, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(paths);
-
         string[] pathArray = paths as string[] ?? paths.ToArray();
 
         string[] missing = pathArray.Where(p => !File.Exists(p)).ToArray();
         if (missing.Length > 0)
             throw new FileNotFoundException($"The file(s) '{string.Join(", ", missing)}' were not found.");
 
-        List<Profanity> profanities = [];
+        List<JsonProfanity> profanities = [];
         foreach (string path in pathArray)
         {
             await using FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
             try
             {
-                await foreach (Profanity? profanity in JsonSerializer
-                                   .DeserializeAsyncEnumerable<Profanity>(fs, JsonSerializerOptions, cancellationToken)
+                await foreach (JsonProfanity? profanity in JsonSerializer
+                                   .DeserializeAsyncEnumerable<JsonProfanity>(fs, JsonSerializerOptions, cancellationToken)
                                    .ConfigureAwait(false))
                 {
                     if (profanity is not null)

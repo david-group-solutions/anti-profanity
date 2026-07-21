@@ -9,16 +9,15 @@ public class ProfanityDetectionSimpleTxtHandler(IEnumerable<IProfanityDataSource
 {
     private readonly ProfanitySimpleTxtDataSource _dataSource = dataSources.OfType<ProfanitySimpleTxtDataSource>().Single();
 
-    public Task DetectAsync(ProfanityDetectionContext context, NextProfanityDetectionHandlerDelegate? next)
+    public Task DetectAsync(ProfanityDetectionContext context, NextProfanityDetectionHandlerDelegate next)
     {
         foreach (string token in Tokenize(context.Content))
             if (_dataSource.Profanities.Contains(token))
-                context.Occurrences.Add(new ProfanityOccurrence(token, 0, context.Content.Length - 1));
+                context.Occurrences.Add(new ProfanityOccurrence(token, 0, context.Content.Length));
 
-        next?.Invoke(context);
-        return Task.CompletedTask;
+        return next.Invoke(context);
     }
 
-    private static IEnumerable<string> Tokenize(string text) =>
+    private static string[] Tokenize(string text) =>
         text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }

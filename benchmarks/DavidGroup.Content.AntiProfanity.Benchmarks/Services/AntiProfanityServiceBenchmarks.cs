@@ -4,6 +4,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Order;
 
+using DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 using DavidGroup.Content.AntiProfanity.Extensions;
 using DavidGroup.Content.AntiProfanity.Models;
 using DavidGroup.Content.AntiProfanity.Services;
@@ -38,7 +39,9 @@ public class AntiProfanityServiceBenchmarks
         ServiceCollection services = new();
         services.AddSingleton(configuration);
 
-        services.AddAntiProfanity(configuration);
+        services.AddAntiProfanity(configuration)
+            .AddHandler<ProfanityDetectionJsonHandler>()
+            .AddHandler<ProfanityDetectionTxtHandler>();
 
         _serviceProvider = services.BuildServiceProvider();
 

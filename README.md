@@ -37,7 +37,9 @@ New samples are added continuously as more features are developed.
 ```csharp
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddAntiProfanity(builder.Configuration, Assembly.GetExecutingAssembly());
+builder.Services.AddAntiProfanity(builder.Configuration, Assembly.GetExecutingAssembly())
+    .AddHandler<ProfanityDetectionJsonHandler>()
+    .AddHandler<ProfanityDetectionTxtHandler>();
 
 WebApplication app = builder.Build();
 

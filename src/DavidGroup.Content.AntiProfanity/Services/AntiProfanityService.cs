@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using DavidGroup.Content.AntiProfanity.DetectionHandlers;
 using DavidGroup.Content.AntiProfanity.Enums;
 using DavidGroup.Content.AntiProfanity.Models;
-using DavidGroup.Content.AntiProfanity.Pipeline;
+using DavidGroup.Content.AntiProfanity.Pipelines;
 
 namespace DavidGroup.Content.AntiProfanity.Services;
 
@@ -45,7 +45,7 @@ public class AntiProfanityService(IProfanityDetectionPipeline pipeline) : IAntiP
 
             foreach (ProfanityOccurrence occurrence in state.occurrences)
             {
-                span.Slice(occurrence.StartIndex, occurrence.EndIndex - occurrence.StartIndex + 1)
+                span.Slice(occurrence.Index, occurrence.Length)
                     .Fill(state.censorCharacter);
             }
         });

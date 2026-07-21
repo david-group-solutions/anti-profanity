@@ -3,7 +3,7 @@ using System.Reflection;
 using DavidGroup.Content.AntiProfanity.DataSources;
 using DavidGroup.Content.AntiProfanity.DetectionHandlers;
 using DavidGroup.Content.AntiProfanity.Options;
-using DavidGroup.Content.AntiProfanity.Pipeline;
+using DavidGroup.Content.AntiProfanity.Pipelines;
 using DavidGroup.Content.AntiProfanity.Services;
 
 using Microsoft.Extensions.Configuration;
@@ -27,9 +27,7 @@ public static class ServiceCollectionExtensions
     /// <see cref="AntiProfanityOptions"/> section.
     /// </param>
     /// <param name="assembly">
-    /// An optional assembly to scan for implementations of
-    /// <see cref="IProfanityDataSource"/> and
-    /// <see cref="IProfanityDetectionHandler"/>.
+    /// An optional assembly to scan for implementations of <see cref="IProfanityDataSource"/>.
     /// If <see langword="null"/>, only the AntiProfanity assembly is scanned.
     /// </param>
     /// <returns>
@@ -56,14 +54,28 @@ public static class ServiceCollectionExtensions
             .As<IProfanityDataSource>()
             .WithSingletonLifetime());
 
-        services.Scan(scan => scan
-            .FromAssemblies(assemblies)
-            .AddClasses(classes => classes.AssignableTo<IProfanityDetectionHandler>(), publicOnly: false)
-            .As<IProfanityDetectionHandler>()
-            .WithTransientLifetime());
+        services.AddSingleton<IProfanityDetectionPipeline, ProfanityDetectionPipeline>();
+        services.AddSingleton<IAntiProfanityService, AntiProfanityService>();
 
-        services.AddTransient<IProfanityDetectionPipeline, ProfanityDetectionPipeline>();
-        services.AddTransient<IAntiProfanityService, AntiProfanityService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a profanity detection handler in the dependency injection container.
+    /// </summary>
+    /// <typeparam name="THandler">
+    /// The type of the handler to register.
+    /// </typeparam>
+    /// <param name="services">
+    /// The service collection to add the handler to.
+    /// </param>
+    /// <returns>
+    /// The same <see cref="IServiceCollection"/> instance so that additional calls can be chained.
+    /// </returns>
+    public static IServiceCollection AddHandler<THandler>(this IServiceCollection services)
+        where THandler : class, IProfanityDetectionHandler
+    {
+        services.AddTransient<IProfanityDetectionHandler, THandler>();
 
         return services;
     }

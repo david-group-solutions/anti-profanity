@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 using DavidGroup.Content.AntiProfanity.Enums;
@@ -7,7 +8,7 @@ namespace DavidGroup.Content.AntiProfanity.Models;
 /// <summary>
 /// Model representing JSON dataset entity.
 /// </summary>
-public class Profanity
+public class JsonProfanity
 {
     /// <summary>
     /// Unique identifier.
@@ -42,11 +43,13 @@ public class Profanity
     /// <summary>
     /// Complied <see cref="Match"/> pattern.
     /// </summary>
+    [JsonIgnore]
     public Regex MatchRegex { get; private set; } = null!;
 
     /// <summary>
     /// Complied <see cref="ExceptionRegexes"/> patterns.
     /// </summary>
+    [JsonIgnore]
     public List<Regex> ExceptionRegexes { get; } = [];
 
     /// <summary>

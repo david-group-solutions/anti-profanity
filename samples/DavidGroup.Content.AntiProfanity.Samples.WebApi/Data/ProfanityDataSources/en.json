@@ -158,6 +158,7 @@
   {
     "id": "ass",
     "match": "ass",
+    "partialMatch": false,
     "tags": [
       "sexual"
     ],

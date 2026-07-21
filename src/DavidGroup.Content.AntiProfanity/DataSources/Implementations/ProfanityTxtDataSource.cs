@@ -10,8 +10,6 @@ internal sealed class ProfanityTxtDataSource : IProfanityDataSource
 
     public Task LoadAsync(IEnumerable<string> paths, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(paths);
-
         string[] pathArray = paths as string[] ?? paths.ToArray();
 
         string[] missing = pathArray.Where(p => !File.Exists(p)).ToArray();

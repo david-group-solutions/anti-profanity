@@ -1,6 +1,6 @@
 using DavidGroup.Content.AntiProfanity.DetectionHandlers;
 
-namespace DavidGroup.Content.AntiProfanity.Pipeline;
+namespace DavidGroup.Content.AntiProfanity.Pipelines;
 
 /// <summary>
 /// Represents the default implementation of <see cref="IProfanityDetectionPipeline"/>.

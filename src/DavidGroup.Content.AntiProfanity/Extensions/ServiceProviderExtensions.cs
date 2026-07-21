@@ -14,7 +14,7 @@ public static class ServiceProviderExtensions
     /// <summary>
     /// Loads all configured profanity data sources.
     /// </summary>
-    /// <param name="services">
+    /// <param name="serviceProvider">
     /// The service provider used to resolve the required services.
     /// </param>
     /// <param name="cancellationToken">
@@ -27,26 +27,36 @@ public static class ServiceProviderExtensions
     /// Thrown when no registered <see cref="IProfanityDataSource"/> supports
     /// the extension of a configured data source file.
     /// </exception>
+    /// <exception cref="NotSupportedException">
+    /// Thrown when a configured data source file does not have a valid file extension.
+    /// </exception>
     public static async Task InitializeAntiProfanityDataSourcesAsync(
-        this IServiceProvider services,
+        this IServiceProvider serviceProvider,
         CancellationToken cancellationToken = default)
     {
-        AntiProfanityOptions options = services.GetRequiredService<IOptions<AntiProfanityOptions>>().Value;
+        AntiProfanityOptions options = serviceProvider.GetRequiredService<IOptions<AntiProfanityOptions>>().Value;
 
         IEnumerable<IProfanityDataSource> dataSources
-            = services.GetRequiredService<IEnumerable<IProfanityDataSource>>();
+            = serviceProvider.GetRequiredService<IEnumerable<IProfanityDataSource>>();
 
         IEnumerable<IGrouping<string?, string>> groupedByExtension = options.DataSources
             .Select(fileName => Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
                 options.DataSourcesBasePath,
-                fileName))
+                fileName
+            ))
             .GroupBy(Path.GetExtension);
 
         await Parallel.ForEachAsync(groupedByExtension, cancellationToken,
             async (group, ct) =>
             {
-                string extension = group.Key ?? string.Empty;
+                string? extension = group.Key;
+
+                if (string.IsNullOrWhiteSpace(extension))
+                {
+                    throw new NotSupportedException(
+                        $"The file '{group.First()}' does not have a supported extension.");
+                }
 
                 IProfanityDataSource dataSource = dataSources.FirstOrDefault(x => x.CanLoad(extension))
                                                   ?? throw new InvalidOperationException(
