@@ -364,3 +364,10 @@ $RECYCLE.BIN/
 CodeCoverage/
 *.pfx
 *.publishsettings
+
+
+############
+# Datasets #
+###########
+wikipedia.txt
+
