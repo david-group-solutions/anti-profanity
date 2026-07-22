@@ -13,10 +13,17 @@ namespace DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 /// <param name="dataSources">
 /// The collection of registered profanity data sources.
 /// </param>
-public sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSource> dataSources)
+public sealed partial class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSource> dataSources)
     : IProfanityDetectionHandler
 {
     private readonly ProfanityJsonDataSource _dataSource = dataSources.OfType<ProfanityJsonDataSource>().Single();
+
+    /// <summary>
+    /// Matches contiguous word characters; used to find the words surrounding a
+    /// profanity match when checking multi-word exceptions.
+    /// </summary>
+    [GeneratedRegex(@"\w+", RegexOptions.Compiled | RegexOptions.CultureInvariant)]
+    private static partial Regex WordRegex();
 
     /// <summary>
     /// Detects profanities in the specified text using the configured JSON data source
@@ -33,6 +40,11 @@ public sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSour
     /// </returns>
     public Task DetectAsync(ProfanityDetectionContext context, NextProfanityDetectionHandlerDelegate next)
     {
+        List<(int Index, int Length)> words = [];
+
+        foreach (Match wordMatch in WordRegex().Matches(context.Content))
+            words.Add((wordMatch.Index, wordMatch.Length));
+
         foreach (JsonProfanity profanity in _dataSource.Profanities)
         {
             if (profanity.Severity < context.SeverityLevel)
@@ -46,12 +58,42 @@ public sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSour
                 {
                     ReadOnlySpan<char> word = context.Content.AsSpan(match.Index, match.Length);
 
-                    foreach (Regex exception in profanity.ExceptionRegexes)
+                    for (int i = 0; i < profanity.ExceptionRegexes.Count; i++)
                     {
-                        if (exception.IsMatch(word))
+                        int extraWordsCount = profanity.Exceptions[i].Count(x => x == ' ');
+                        if (extraWordsCount == 0)
                         {
-                            isException = true;
-                            break;
+                            if (profanity.ExceptionRegexes[i].IsMatch(word))
+                            {
+                                isException = true;
+                                break;
+                            }
+
+                            continue;
+                        }
+
+                        {
+                            bool isMultiWordException = false;
+
+                            for (int wordsBefore = 0; wordsBefore <= extraWordsCount; wordsBefore++)
+                            {
+                                int wordsAfter = extraWordsCount - wordsBefore;
+
+                                if (TryGetNeighbourPhrase(
+                                        context.Content, words, match.Index, match.Length, wordsBefore, wordsAfter,
+                                        out ReadOnlySpan<char> phrase) &&
+                                    profanity.ExceptionRegexes[i].IsMatch(phrase))
+                                {
+                                    isMultiWordException = true;
+                                    break;
+                                }
+                            }
+
+                            if (isMultiWordException)
+                            {
+                                isException = true;
+                                break;
+                            }
                         }
                     }
                 }
@@ -63,5 +105,42 @@ public sealed class ProfanityDetectionJsonHandler(IEnumerable<IProfanityDataSour
         }
 
         return next.Invoke(context);
+    }
+
+    /// <summary>
+    /// Attempts to build the span covering the matched word plus the requested number of
+    /// neighboring words immediately before/after it, using pre-computed word boundaries.
+    /// </summary>
+    private static bool TryGetNeighbourPhrase(
+        string content,
+        List<(int Index, int Length)> words,
+        int matchIndex,
+        int matchLength,
+        int wordsBefore,
+        int wordsAfter,
+        out ReadOnlySpan<char> phrase)
+    {
+        int centerIndex = words.FindIndex(w => w.Index == matchIndex && w.Length == matchLength);
+
+        if (centerIndex == -1)
+        {
+            phrase = default;
+            return false;
+        }
+
+        int startIndex = centerIndex - wordsBefore;
+        int endIndex = centerIndex + wordsAfter;
+
+        if (startIndex < 0 || endIndex >= words.Count)
+        {
+            phrase = default;
+            return false;
+        }
+
+        int start = words[startIndex].Index;
+        int end = words[endIndex].Index + words[endIndex].Length;
+
+        phrase = content.AsSpan(start, end - start);
+        return true;
     }
 }

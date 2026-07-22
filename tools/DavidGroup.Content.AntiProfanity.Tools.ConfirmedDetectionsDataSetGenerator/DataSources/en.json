@@ -1191,7 +1191,10 @@
     "tags": [
       "sexual"
     ],
-    "severity": 3
+    "severity": 3,
+    "exceptions": [
+      "cum laude"
+    ]
   },
   {
     "id": "cumming",

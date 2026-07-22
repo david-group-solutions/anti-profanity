@@ -60,9 +60,16 @@ public class JsonProfanity
             RegexOptions.CultureInvariant
         );
 
-        foreach (string exceptionPattern in Exceptions.Select(exception => string.Concat(
-                     "^", Regex.Escape(exception).Replace(@"\*", @"\w*"), "$")))
+        foreach (string exception in Exceptions)
         {
+            string exceptionPattern = string.Concat(
+                "^",
+                string.Join(@"\s+", exception
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(w => Regex.Escape(w).Replace(@"\*", @"\w*"))),
+                "$"
+            );
+
             ExceptionRegexes.Add(
                 new Regex(exceptionPattern,
                     RegexOptions.Compiled |
