@@ -3,7 +3,7 @@
 using DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 using DavidGroup.Content.AntiProfanity.Extensions;
 using DavidGroup.Content.AntiProfanity.Services;
-using DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Services;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,4 +45,4 @@ IAntiProfanityService antiProfanityService = serviceProvider.GetRequiredService<
 StateStore stateStore = new(stateFilePath, new JsonSerializerOptions { WriteIndented = true });
 ProfanityScanner scanner = new(antiProfanityService, stateStore);
 
-await scanner.RunAsync(inputDirectory, files, confirmedDetectionsFileStream, wrongDetectionsFileStream);
+await scanner.RunAsync(inputDirectory, files, confirmedDetectionsFilePath, confirmedDetectionsFileStream, wrongDetectionsFileStream);

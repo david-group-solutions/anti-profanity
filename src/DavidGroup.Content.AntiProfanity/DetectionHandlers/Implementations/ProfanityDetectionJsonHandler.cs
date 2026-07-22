@@ -60,7 +60,7 @@ public sealed partial class ProfanityDetectionJsonHandler(IEnumerable<IProfanity
 
                     for (int i = 0; i < profanity.ExceptionRegexes.Count; i++)
                     {
-                        int extraWordsCount = profanity.Exceptions[i].Count(x => x == ' ');
+                        int extraWordsCount = profanity.Exceptions[i].Count(x => x is ' ' or '-');
                         if (extraWordsCount == 0)
                         {
                             if (profanity.ExceptionRegexes[i].IsMatch(word))

@@ -1624,7 +1624,7 @@
   },
   {
     "id": "fingering",
-    "match": "fingering|fingered",
+    "match": "fingering",
     "tags": [
       "sexual"
     ],
@@ -1640,7 +1640,7 @@
   },
   {
     "id": "fisting",
-    "match": "fisting|fisted",
+    "match": "fisting",
     "tags": [
       "sexual"
     ],

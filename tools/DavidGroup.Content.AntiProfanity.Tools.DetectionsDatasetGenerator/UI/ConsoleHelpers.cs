@@ -1,4 +1,4 @@
-namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.UI;
+namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.UI;
 
 public static class ConsoleHelpers
 {

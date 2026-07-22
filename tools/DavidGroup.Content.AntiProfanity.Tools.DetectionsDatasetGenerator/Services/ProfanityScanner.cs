@@ -4,11 +4,11 @@ using System.Text.Json;
 
 using DavidGroup.Content.AntiProfanity.Models;
 using DavidGroup.Content.AntiProfanity.Services;
-using DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Helpers;
-using DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Models;
-using DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.UI;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Helpers;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Models;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.UI;
 
-namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Services;
+namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services;
 
 /// <summary>
 /// Scans a set of text files for profanity, prompts the user to confirm each hit, records
@@ -24,6 +24,7 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
     public async Task RunAsync(
         string inputDirectory,
         IReadOnlyList<string> files,
+        string confirmedDetectionsFilePath,
         Stream confirmedDetectionsStream,
         Stream wrongDetectionsStream)
     {
@@ -43,6 +44,7 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
                 file,
                 inputPath,
                 state,
+                confirmedDetectionsFilePath,
                 confirmedDetectionsStream,
                 wrongDetectionsStream,
                 overallBytesProcessed,
@@ -57,6 +59,7 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
         string file,
         string inputPath,
         State state,
+        string confirmedDetectionsFilePath,
         Stream confirmedDetectionsStream,
         Stream wrongDetectionsStream,
         long overallBytesProcessed,
@@ -96,6 +99,7 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
                 file,
                 testableChunk,
                 chunkStartPosition,
+                confirmedDetectionsFilePath,
                 confirmedDetectionsStream,
                 wrongDetectionsStream,
                 overallBytesProcessed,
@@ -114,6 +118,7 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
         string file,
         string testableChunk,
         long chunkStartPosition,
+        string confirmedDetectionsFilePath,
         Stream confirmedDetectionsStream,
         Stream wrongDetectionsStream,
         long overallBytesProcessed,
@@ -126,14 +131,19 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
         foreach (ProfanityOccurrence detection in detections)
         {
             string profanityInText = testableChunk.Substring(detection.Index, detection.Length);
-            string enclosingWord = TextChunkHelper.GetEnclosingWord(testableChunk, detection).ToString();
-            ReadOnlySpan<char> context = TextChunkHelper.GetSmallChunk(testableChunk, detection, ContextPaddingSize);
+            (int Start, int End) smallChunkBoundaries =
+                TextChunkHelper.GetSmallChunkBoundaries(testableChunk, detection, ContextPaddingSize);
+            ReadOnlySpan<char> smallChunk = testableChunk.AsSpan()
+                .Slice(smallChunkBoundaries.Start, smallChunkBoundaries.End - smallChunkBoundaries.Start);
 
             long absolutePosition = chunkStartPosition + Encoding.UTF8.GetByteCount(testableChunk[..detection.Index]);
 
             ConsoleProgressReporter.DrawReport(file, overallBytesProcessed + fs.Position, totalBytesAllFiles, fs.Position, currentFileLength);
 
-            if (ProfanityConfirmationPrompt.Ask(profanityInText, enclosingWord, context, detection.Details))
+            if (File.ReadLines(confirmedDetectionsFilePath).Any(line => line == $"detected={profanityInText}"))
+                continue;
+
+            if (ProfanityConfirmationPrompt.Ask(detection, smallChunk, smallChunkBoundaries.Start))
             {
                 string confirmedLine =
                     $"source={file}\n" +

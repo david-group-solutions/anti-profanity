@@ -1,4 +1,4 @@
-namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Models;
+namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Models;
 
 public class State
 {

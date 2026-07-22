@@ -1,6 +1,8 @@
 using System.Text.Json;
 
-namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.UI;
+using DavidGroup.Content.AntiProfanity.Models;
+
+namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.UI;
 
 /// <summary>
 /// Prompts the user in the console to confirm whether a flagged snippet is genuinely profanity.
@@ -9,52 +11,34 @@ public static class ProfanityConfirmationPrompt
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public static bool Ask(
-        string profanityInText,
-        string enclosingWord,
-        ReadOnlySpan<char> context,
-        object? metadata)
+    public static bool Ask(ProfanityOccurrence detection, ReadOnlySpan<char> smallChunk, int smallChunkStart)
     {
         Console.ResetColor();
         Console.Write("Possible profanity detected: ");
 
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.Write($"\"{profanityInText}\"");
+        Console.Write($"\"{detection.Profanity}\"\n\n");
 
         Console.ResetColor();
-        Console.Write(" (in word: ");
-
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"\"{enclosingWord}\"");
-
-        Console.ResetColor();
-        Console.WriteLine(")");
-        Console.WriteLine();
 
         Console.WriteLine("Context:");
-        int index = context.IndexOf(enclosingWord, StringComparison.OrdinalIgnoreCase);
-        if (index >= 0)
-        {
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write(context[..index]);
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(smallChunk[..(detection.Index - smallChunkStart)]);
 
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write(context[index..(index + enclosingWord.Length)]);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write(smallChunk[(detection.Index - smallChunkStart)..(detection.Index + detection.Length - smallChunkStart)]);
 
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine(context[(index + enclosingWord.Length)..]);
-        }
-        else
-            Console.WriteLine(context);
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.WriteLine(smallChunk[(detection.Index + detection.Length - smallChunkStart)..]);
 
-        if (metadata is not null)
+        if (detection.Details is not null)
         {
             Console.ResetColor();
             Console.WriteLine();
 
             Console.WriteLine("Detection Metadata:");
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine(JsonSerializer.Serialize(metadata, JsonOptions));
+            Console.WriteLine(JsonSerializer.Serialize(detection.Details, JsonOptions));
         }
 
         Console.ResetColor();

@@ -1,4 +1,4 @@
-namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.UI;
+namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.UI;
 
 /// <summary>
 /// Renders overall + per-file progress bars to the console.
