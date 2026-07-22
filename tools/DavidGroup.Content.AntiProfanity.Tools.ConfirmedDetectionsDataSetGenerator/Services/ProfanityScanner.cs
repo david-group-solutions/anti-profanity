@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Text;
+using System.Text.Json;
 
 using DavidGroup.Content.AntiProfanity.Models;
 using DavidGroup.Content.AntiProfanity.Services;
@@ -18,7 +19,13 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
     private const int BufferSize = 4096;
     private const int ContextPaddingSize = 50;
 
-    public async Task RunAsync(string inputDirectory, IReadOnlyList<string> files, Stream confirmedDetectionsStream)
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
+    public async Task RunAsync(
+        string inputDirectory,
+        IReadOnlyList<string> files,
+        Stream confirmedDetectionsStream,
+        Stream wrongDetectionsStream)
     {
         State state = stateStore.Load();
 
@@ -32,7 +39,15 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
             if (!File.Exists(inputPath))
                 throw new FileNotFoundException($"File '{file}' not found in '{inputPath}'.");
 
-            await ScanFileAsync(file, inputPath, state, confirmedDetectionsStream, overallBytesProcessed, totalBytesAllFiles);
+            await ScanFileAsync(
+                file,
+                inputPath,
+                state,
+                confirmedDetectionsStream,
+                wrongDetectionsStream,
+                overallBytesProcessed,
+                totalBytesAllFiles
+            );
 
             overallBytesProcessed += new FileInfo(inputPath).Length;
         }
@@ -43,6 +58,7 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
         string inputPath,
         State state,
         Stream confirmedDetectionsStream,
+        Stream wrongDetectionsStream,
         long overallBytesProcessed,
         long totalBytesAllFiles)
     {
@@ -81,6 +97,7 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
                 testableChunk,
                 chunkStartPosition,
                 confirmedDetectionsStream,
+                wrongDetectionsStream,
                 overallBytesProcessed,
                 totalBytesAllFiles,
                 fs,
@@ -98,6 +115,7 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
         string testableChunk,
         long chunkStartPosition,
         Stream confirmedDetectionsStream,
+        Stream wrongDetectionsStream,
         long overallBytesProcessed,
         long totalBytesAllFiles,
         FileStream fs,
@@ -111,22 +129,35 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
             string enclosingWord = TextChunkHelper.GetEnclosingWord(testableChunk, detection).ToString();
             ReadOnlySpan<char> context = TextChunkHelper.GetSmallChunk(testableChunk, detection, ContextPaddingSize);
 
-            ConsoleProgressReporter.DrawReport(file, overallBytesProcessed + fs.Position, totalBytesAllFiles, fs.Position, currentFileLength);
-
-            if (!ProfanityConfirmationPrompt.Ask(profanityInText, enclosingWord, context, detection.Details))
-                continue;
-
-            ConsoleProgressReporter.DrawReport(file, overallBytesProcessed + fs.Position, totalBytesAllFiles, fs.Position, currentFileLength);
-
             long absolutePosition = chunkStartPosition + Encoding.UTF8.GetByteCount(testableChunk[..detection.Index]);
 
-            string confirmedLine =
-                $"source={file}\n" +
-                $"position={absolutePosition}\n" +
-                $"detected={profanityInText}\n\n";
+            ConsoleProgressReporter.DrawReport(file, overallBytesProcessed + fs.Position, totalBytesAllFiles, fs.Position, currentFileLength);
 
-            await confirmedDetectionsStream.WriteAsync(Encoding.UTF8.GetBytes(confirmedLine));
-            await confirmedDetectionsStream.FlushAsync();
+            if (ProfanityConfirmationPrompt.Ask(profanityInText, enclosingWord, context, detection.Details))
+            {
+                string confirmedLine =
+                    $"source={file}\n" +
+                    $"position={absolutePosition}\n" +
+                    $"detected={profanityInText}\n\n";
+
+                await confirmedDetectionsStream.WriteAsync(Encoding.UTF8.GetBytes(confirmedLine));
+                await confirmedDetectionsStream.FlushAsync();
+            }
+            else
+            {
+                string metadata = detection.Details is not null
+                    ? $"\n{JsonSerializer.Serialize(detection.Details, JsonOptions)}\n\n"
+                    : "none\n\n";
+
+                string wrongLine =
+                    $"source={file}\n" +
+                    $"position={absolutePosition}\n" +
+                    $"detected={profanityInText}\n" +
+                    $"metadata={metadata}";
+
+                await wrongDetectionsStream.WriteAsync(Encoding.UTF8.GetBytes(wrongLine));
+                await wrongDetectionsStream.FlushAsync();
+            }
         }
     }
 

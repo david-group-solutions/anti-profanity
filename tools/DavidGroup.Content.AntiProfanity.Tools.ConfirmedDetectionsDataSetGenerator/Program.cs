@@ -30,14 +30,19 @@ string outputDirectory = Path.Combine(projectDirectory, "Output");
 Directory.CreateDirectory(outputDirectory);
 
 string confirmedDetectionsFilePath = Path.Combine(outputDirectory, "confirmed_detections.txt");
+string wrongDetectionsFilePath = Path.Combine(outputDirectory, "wrong_detections.txt");
 string stateFilePath = Path.Combine(outputDirectory, "state.txt");
 
 await using FileStream confirmedDetectionsFileStream =
     new(confirmedDetectionsFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
 confirmedDetectionsFileStream.Seek(0, SeekOrigin.End);
 
+await using FileStream wrongDetectionsFileStream =
+    new(wrongDetectionsFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+wrongDetectionsFileStream.Seek(0, SeekOrigin.End);
+
 IAntiProfanityService antiProfanityService = serviceProvider.GetRequiredService<IAntiProfanityService>();
 StateStore stateStore = new(stateFilePath, new JsonSerializerOptions { WriteIndented = true });
 ProfanityScanner scanner = new(antiProfanityService, stateStore);
 
-await scanner.RunAsync(inputDirectory, files, confirmedDetectionsFileStream);
+await scanner.RunAsync(inputDirectory, files, confirmedDetectionsFileStream, wrongDetectionsFileStream);
