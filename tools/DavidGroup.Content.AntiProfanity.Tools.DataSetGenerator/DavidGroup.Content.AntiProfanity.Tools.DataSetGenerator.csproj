@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DavidGroup.Content.AntiProfanity\DavidGroup.Content.AntiProfanity.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="DataSources\**" CopyToOutputDirectory="PreserveNewest"/>
+    <None Update="DataSources\ru.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DataSources\en.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Input\**" CopyToOutputDirectory="PreserveNewest"/>
+  </ItemGroup>
+
+</Project>
