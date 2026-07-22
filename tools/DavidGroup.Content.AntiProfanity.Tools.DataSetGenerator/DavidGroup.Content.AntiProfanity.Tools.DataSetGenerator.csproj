@@ -12,16 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="DataSources\**" CopyToOutputDirectory="PreserveNewest"/>
-    <None Update="DataSources\ru.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="DataSources\en.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.10"/>
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest"/>
+    <None Update="DataSources\**" CopyToOutputDirectory="PreserveNewest"/>
     <None Update="Input\**" CopyToOutputDirectory="PreserveNewest"/>
   </ItemGroup>
 

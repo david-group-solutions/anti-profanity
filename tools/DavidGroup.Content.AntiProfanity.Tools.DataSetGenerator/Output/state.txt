@@ -1,0 +1,16 @@
+{
+  "Statuses": {
+    "Romeo_and_Juliet.txt": {
+      "Position": 480954,
+      "LastIncompleteChunk": " eBooks.\n"
+    },
+    "Wuthering_Heights.txt": {
+      "Position": 681055,
+      "LastIncompleteChunk": " eBooks.\n"
+    },
+    "Pride_and_Prejudice.txt": {
+      "Position": 757435,
+      "LastIncompleteChunk": " eBooks.\n"
+    }
+  }
+}
