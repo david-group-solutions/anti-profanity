@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.UI;
 
 /// <summary>
@@ -5,7 +7,13 @@ namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGener
 /// </summary>
 public static class ProfanityConfirmationPrompt
 {
-    public static bool Ask(string profanityInText, string enclosingWord, ReadOnlySpan<char> context)
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
+    public static bool Ask(
+        string profanityInText,
+        string enclosingWord,
+        ReadOnlySpan<char> context,
+        object? metadata)
     {
         Console.ResetColor();
         Console.Write("Possible profanity detected: ");
@@ -38,6 +46,16 @@ public static class ProfanityConfirmationPrompt
         }
         else
             Console.WriteLine(context);
+
+        if (metadata is not null)
+        {
+            Console.ResetColor();
+            Console.WriteLine();
+
+            Console.WriteLine("Detection Metadata:");
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine(JsonSerializer.Serialize(metadata, JsonOptions));
+        }
 
         Console.ResetColor();
         Console.WriteLine();

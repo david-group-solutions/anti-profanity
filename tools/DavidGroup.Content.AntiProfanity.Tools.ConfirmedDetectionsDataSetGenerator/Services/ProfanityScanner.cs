@@ -113,7 +113,7 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
 
             ConsoleProgressReporter.DrawReport(file, overallBytesProcessed + fs.Position, totalBytesAllFiles, fs.Position, currentFileLength);
 
-            if (!ProfanityConfirmationPrompt.Ask(profanityInText, enclosingWord, context))
+            if (!ProfanityConfirmationPrompt.Ask(profanityInText, enclosingWord, context, detection.Details))
                 continue;
 
             ConsoleProgressReporter.DrawReport(file, overallBytesProcessed + fs.Position, totalBytesAllFiles, fs.Position, currentFileLength);
