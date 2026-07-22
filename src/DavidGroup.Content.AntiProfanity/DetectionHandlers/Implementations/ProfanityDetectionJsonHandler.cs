@@ -42,7 +42,7 @@ public sealed partial class ProfanityDetectionJsonHandler(IEnumerable<IProfanity
     {
         List<(int Index, int Length)> words = [];
 
-        foreach (Match wordMatch in WordRegex().Matches(context.Content))
+        foreach (ValueMatch wordMatch in WordRegex().EnumerateMatches(context.Content))
             words.Add((wordMatch.Index, wordMatch.Length));
 
         foreach (JsonProfanity profanity in _dataSource.Profanities)
