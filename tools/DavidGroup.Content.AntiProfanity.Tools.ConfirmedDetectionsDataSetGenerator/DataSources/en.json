@@ -792,20 +792,6 @@
     "severity": 3
   },
   {
-    "id": "christ",
-    "match": "chri*st",
-    "tags": [
-      "religious"
-    ],
-    "severity": 1,
-    "exceptions": [
-      "*en",
-      "*ian",
-      "*ie",
-      "*y"
-    ]
-  },
-  {
     "id": "cialis",
     "match": "cialis",
     "tags": [
@@ -1397,14 +1383,6 @@
   {
     "id": "dolcett",
     "match": "dolcett",
-    "tags": [
-      "sexual"
-    ],
-    "severity": 3
-  },
-  {
-    "id": "domination",
-    "match": "domination",
     "tags": [
       "sexual"
     ],
@@ -2174,25 +2152,6 @@
     "severity": 3
   },
   {
-    "id": "jesus",
-    "match": "je*su*s",
-    "tags": [
-      "religious"
-    ],
-    "severity": 1,
-    "exceptions": [
-      "be*"
-    ]
-  },
-  {
-    "id": "jesus-christ",
-    "match": "je*su*s chri*st",
-    "tags": [
-      "religious"
-    ],
-    "severity": 2
-  },
-  {
     "id": "jigaboo",
     "match": "jig*aboo*|jig*gerboo*",
     "tags": [
@@ -2761,7 +2720,7 @@
     "tags": [
       "sexual"
     ],
-    "severity": 3
+    "severity": 1
   },
   {
     "id": "parthenophilia",
@@ -3455,14 +3414,6 @@
       "racial"
     ],
     "severity": 3
-  },
-  {
-    "id": "snatch",
-    "match": "snatch",
-    "tags": [
-      "sexual"
-    ],
-    "severity": 1
   },
   {
     "id": "snowballing",
