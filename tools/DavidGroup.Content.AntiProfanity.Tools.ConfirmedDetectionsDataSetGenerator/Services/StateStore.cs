@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-using DavidGroup.Content.AntiProfanity.Tools.DataSetGenerator.Models;
+using DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Models;
 
-namespace DavidGroup.Content.AntiProfanity.Tools.DataSetGenerator.Services;
+namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Services;
 
 /// <summary>
 /// Loads and persists the scan <see cref="State"/> to disk as JSON, so a run can resume

@@ -3,11 +3,11 @@ using System.Text;
 
 using DavidGroup.Content.AntiProfanity.Models;
 using DavidGroup.Content.AntiProfanity.Services;
-using DavidGroup.Content.AntiProfanity.Tools.DataSetGenerator.Helpers;
-using DavidGroup.Content.AntiProfanity.Tools.DataSetGenerator.Models;
-using DavidGroup.Content.AntiProfanity.Tools.DataSetGenerator.UI;
+using DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Helpers;
+using DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Models;
+using DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.UI;
 
-namespace DavidGroup.Content.AntiProfanity.Tools.DataSetGenerator.Services;
+namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Services;
 
 /// <summary>
 /// Scans a set of text files for profanity, prompts the user to confirm each hit, records

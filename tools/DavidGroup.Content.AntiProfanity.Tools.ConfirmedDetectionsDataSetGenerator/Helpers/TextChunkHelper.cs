@@ -1,6 +1,6 @@
 using DavidGroup.Content.AntiProfanity.Models;
 
-namespace DavidGroup.Content.AntiProfanity.Tools.DataSetGenerator.Helpers;
+namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Helpers;
 
 /// <summary>
 /// Helpers for extracting readable context around a detected profanity occurrence.

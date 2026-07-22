@@ -1,4 +1,4 @@
-namespace DavidGroup.Content.AntiProfanity.Tools.DataSetGenerator.UI;
+namespace DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.UI;
 
 /// <summary>
 /// Prompts the user in the console to confirm whether a flagged snippet is genuinely profanity.

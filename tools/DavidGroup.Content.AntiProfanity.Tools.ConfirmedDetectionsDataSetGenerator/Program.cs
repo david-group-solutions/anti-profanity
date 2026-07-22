@@ -3,7 +3,7 @@
 using DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 using DavidGroup.Content.AntiProfanity.Extensions;
 using DavidGroup.Content.AntiProfanity.Services;
-using DavidGroup.Content.AntiProfanity.Tools.DataSetGenerator.Services;
+using DavidGroup.Content.AntiProfanity.Tools.ConfirmedDetectionsDataSetGenerator.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
