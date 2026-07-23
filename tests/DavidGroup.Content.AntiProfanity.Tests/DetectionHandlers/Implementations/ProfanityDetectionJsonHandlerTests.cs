@@ -237,6 +237,166 @@ public static class ProfanityDetectionJsonHandlerTests
         }
 
         [Fact]
+        public async Task DetectAsync_MultiWordExceptionMatchesUsingWordAfter_ExcludesOccurrence()
+        {
+            // Arrange
+            const string json = """
+                                [ { "Id": "p1", "Match": "hell", "Severity": 1, "Exceptions": ["hell no"] } ]
+                                """;
+            ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
+
+            ProfanityDetectionContext context = new()
+            {
+                Content = "well hell no thanks",
+                SeverityLevel = ProfanitySeverityLevel.NotSpecified
+            };
+
+            // Act
+            await handler.DetectAsync(context, _ => Task.CompletedTask);
+
+            // Assert
+            Assert.Empty(context.Occurrences);
+        }
+
+        [Fact]
+        public async Task DetectAsync_MultiWordExceptionMatchesUsingWordBefore_ExcludesOccurrence()
+        {
+            // Arrange
+            const string json = """
+                                [ { "Id": "p1", "Match": "hell", "Severity": 1, "Exceptions": ["oh hell"] } ]
+                                """;
+            ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
+
+            ProfanityDetectionContext context = new()
+            {
+                Content = "did you say oh hell now",
+                SeverityLevel = ProfanitySeverityLevel.NotSpecified
+            };
+
+            // Act
+            await handler.DetectAsync(context, _ => Task.CompletedTask);
+
+            // Assert
+            Assert.Empty(context.Occurrences);
+        }
+
+        [Fact]
+        public async Task DetectAsync_MultiWordExceptionNeedsWordBeforeStartOfContent_CannotFormPhrase_IncludesOccurrence()
+        {
+            // Arrange
+            const string json = """
+                                [ { "Id": "p1", "Match": "hell", "Severity": 1, "Exceptions": ["oh hell"] } ]
+                                """;
+            ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
+
+            const string content = "hell now is real";
+            ProfanityDetectionContext context = new()
+            {
+                Content = content,
+                SeverityLevel = ProfanitySeverityLevel.NotSpecified
+            };
+
+            // Act
+            await handler.DetectAsync(context, _ => Task.CompletedTask);
+
+            // Assert
+            ProfanityOccurrence occurrence = Assert.Single(context.Occurrences);
+            Assert.Equal(content.IndexOf("hell", StringComparison.Ordinal), occurrence.Index);
+        }
+
+        [Fact]
+        public async Task DetectAsync_MultiWordExceptionNeedsWordAfterEndOfContent_CannotFormPhrase_IncludesOccurrence()
+        {
+            // Arrange
+            const string json = """
+                                [ { "Id": "p1", "Match": "hell", "Severity": 1, "Exceptions": ["hell no"] } ]
+                                """;
+            ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
+
+            const string content = "oh my hell";
+            ProfanityDetectionContext context = new()
+            {
+                Content = content,
+                SeverityLevel = ProfanitySeverityLevel.NotSpecified
+            };
+
+            // Act
+            await handler.DetectAsync(context, _ => Task.CompletedTask);
+
+            // Assert
+            ProfanityOccurrence occurrence = Assert.Single(context.Occurrences);
+            Assert.Equal(content.IndexOf("hell", StringComparison.Ordinal), occurrence.Index);
+        }
+
+        [Fact]
+        public async Task DetectAsync_MultiWordExceptionWithTwoExtraWords_MatchesUsingOneWordOnEachSide_ExcludesOccurrence()
+        {
+            // Arrange
+            const string json = """
+                                [ { "Id": "p1", "Match": "hell", "Severity": 1, "Exceptions": ["oh hell now"] } ]
+                                """;
+            ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
+
+            ProfanityDetectionContext context = new()
+            {
+                Content = "well oh hell now thanks",
+                SeverityLevel = ProfanitySeverityLevel.NotSpecified
+            };
+
+            // Act
+            await handler.DetectAsync(context, _ => Task.CompletedTask);
+
+            // Assert
+            Assert.Empty(context.Occurrences);
+        }
+
+        [Fact]
+        public async Task DetectAsync_HyphenatedExceptionPhrase_TreatsHyphenAsWordSeparator_ExcludesOccurrence()
+        {
+            // Arrange
+            const string json = """
+                                [ { "Id": "p1", "Match": "known", "Severity": 1, "Exceptions": ["well-known"] } ]
+                                """;
+            ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
+
+            ProfanityDetectionContext context = new()
+            {
+                Content = "he is a well-known author",
+                SeverityLevel = ProfanitySeverityLevel.NotSpecified
+            };
+
+            // Act
+            await handler.DetectAsync(context, _ => Task.CompletedTask);
+
+            // Assert
+            Assert.Empty(context.Occurrences);
+        }
+
+        [Fact]
+        public async Task DetectAsync_SameProfanityMatchedTwiceWithDifferentContext_OnlyNonExceptionOccurrenceIsIncluded()
+        {
+            // Arrange
+            const string json = """
+                                [ { "Id": "p1", "Match": "hell", "Severity": 1, "Exceptions": ["oh hell"] } ]
+                                """;
+            ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
+
+            const string content = "hell yes but also oh hell no";
+            ProfanityDetectionContext context = new()
+            {
+                Content = content,
+                SeverityLevel = ProfanitySeverityLevel.NotSpecified
+            };
+
+            // Act
+            await handler.DetectAsync(context, _ => Task.CompletedTask);
+
+            // Assert
+            ProfanityOccurrence occurrence = Assert.Single(context.Occurrences);
+            Assert.Equal(content.IndexOf("hell", StringComparison.Ordinal), occurrence.Index);
+        }
+
+        [Fact]
         public async Task DetectAsync_ContentContainsMultipleOccurrencesOfSameProfanity_AddsOneOccurrencePerMatch()
         {
             // Arrange
@@ -309,6 +469,50 @@ public static class ProfanityDetectionJsonHandlerTests
         }
 
         [Fact]
+        public async Task DetectAsync_EmptyContent_ReturnsNoOccurrencesAndDoesNotThrow()
+        {
+            // Arrange
+            const string json = """
+                                [ { "Id": "p1", "Match": "badword", "Severity": 1 } ]
+                                """;
+            ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
+
+            ProfanityDetectionContext context = new()
+            {
+                Content = "",
+                SeverityLevel = ProfanitySeverityLevel.NotSpecified
+            };
+
+            // Act
+            Exception? exception = await Record.ExceptionAsync(()
+                => handler.DetectAsync(context, _ => Task.CompletedTask));
+
+            // Assert
+            Assert.Null(exception);
+            Assert.Empty(context.Occurrences);
+        }
+
+        [Fact]
+        public async Task DetectAsync_NoProfanitiesInDataSource_ReturnsNoOccurrences()
+        {
+            // Arrange
+            const string json = "[]";
+            ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
+
+            ProfanityDetectionContext context = new()
+            {
+                Content = "this content mentions cats and dogs and badwords",
+                SeverityLevel = ProfanitySeverityLevel.NotSpecified
+            };
+
+            // Act
+            await handler.DetectAsync(context, _ => Task.CompletedTask);
+
+            // Assert
+            Assert.Empty(context.Occurrences);
+        }
+
+        [Fact]
         public async Task DetectAsync_NextDelegateProvided_InvokesNextWithSameContext()
         {
             // Arrange
@@ -317,10 +521,7 @@ public static class ProfanityDetectionJsonHandlerTests
                                 """;
             ProfanityDetectionJsonHandler handler = await CreateHandlerAsync(json);
 
-            ProfanityDetectionContext context = new()
-            {
-                Content = "hello world"
-            };
+            ProfanityDetectionContext context = new() { Content = "hello world" };
 
             ProfanityDetectionContext? capturedContext = null;
             int callCount = 0;
