@@ -366,8 +366,9 @@ CodeCoverage/
 *.publishsettings
 
 
-############
-# Datasets #
-###########
-wikipedia.txt
+##################
+# Tools Projects #
+##################
+wikipedia_*.txt
+Output*/
 

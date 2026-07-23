@@ -1,87 +1,90 @@
 using System.Collections.ObjectModel;
 using System.Text;
-using System.Text.Json;
 
 using DavidGroup.Content.AntiProfanity.Models;
 using DavidGroup.Content.AntiProfanity.Services;
-using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Helpers;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Models;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services.Stores;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.UI;
 
 namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services;
 
 /// <summary>
-/// Scans a set of text files for profanity, prompts the user to confirm each hit, records
-/// confirmed detections to a stream, and checkpoints progress so a run can resume later.
+/// Scans a set of text files for profanity, stores profanities
+/// and checkpoints progress so a run can resume later.
 /// </summary>
-public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateStore stateStore)
+public class ProfanityScanner(
+    IAntiProfanityService antiProfanityService,
+    DetectionsStore detectionsStore,
+    StateStore stateStore)
 {
     private const int BufferSize = 4096;
-    private const int ContextPaddingSize = 50;
 
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private long _reportInterval;
 
     public async Task RunAsync(
         string inputDirectory,
         IReadOnlyList<string> files,
-        string confirmedDetectionsFilePath,
-        Stream confirmedDetectionsStream,
-        Stream wrongDetectionsStream)
+        int degreeOfParallelism,
+        CancellationToken cancellationToken)
     {
-        State state = stateStore.Load();
+        _reportInterval = 100_000L * degreeOfParallelism;
 
-        long totalBytesAllFiles = files.Sum(f => new FileInfo(Path.Combine(inputDirectory, f)).Length);
-        long overallBytesProcessed = 0;
+        Detections detections = await detectionsStore.LoadAsync();
+        State state = await stateStore.LoadAsync();
 
-        foreach (string file in files)
+        long totalBytesAllFiles = files.Sum(file => new FileInfo(Path.Combine(inputDirectory, file)).Length);
+        long alreadyProcessedBytes = files.Sum(file =>
+            state.Statuses.TryGetValue(file, out FileStatus? status) ? status.Position : 0);
+
+        ProgressTracker progressTracker = new(totalBytesAllFiles, alreadyProcessedBytes);
+        SemaphoreSlim syncLock = new(1, 1);
+
+        ParallelOptions parallelOptions = new()
+        {
+            MaxDegreeOfParallelism = Math.Max(1, degreeOfParallelism),
+            CancellationToken = cancellationToken
+        };
+
+        await Parallel.ForEachAsync(files, parallelOptions, async (file, ct) =>
         {
             string inputPath = Path.Combine(inputDirectory, file);
 
             if (!File.Exists(inputPath))
                 throw new FileNotFoundException($"File '{file}' not found in '{inputPath}'.");
 
-            await ScanFileAsync(
-                file,
-                inputPath,
-                state,
-                confirmedDetectionsFilePath,
-                confirmedDetectionsStream,
-                wrongDetectionsStream,
-                overallBytesProcessed,
-                totalBytesAllFiles
-            );
-
-            overallBytesProcessed += new FileInfo(inputPath).Length;
-        }
+            await ScanFileAsync(file, inputPath, detections, state, progressTracker, syncLock, ct);
+        });
     }
 
     private async Task ScanFileAsync(
         string file,
         string inputPath,
+        Detections detections,
         State state,
-        string confirmedDetectionsFilePath,
-        Stream confirmedDetectionsStream,
-        Stream wrongDetectionsStream,
-        long overallBytesProcessed,
-        long totalBytesAllFiles)
+        ProgressTracker progressTracker,
+        SemaphoreSlim syncLock,
+        CancellationToken cancellationToken)
     {
         long currentFileLength = new FileInfo(inputPath).Length;
-        byte[] buffer = new byte[BufferSize];
-
-        FileStatus? currentFileStatus = state.Statuses.GetValueOrDefault(file);
 
         await using FileStream fs = new(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        fs.Position = currentFileStatus?.Position ?? 0;
 
+        FileStatus? currentFileStatus = state.Statuses.GetValueOrDefault(file);
+        fs.Position = currentFileStatus?.Position ?? 0;
         string lastIncompleteChunk = currentFileStatus?.LastIncompleteChunk ?? string.Empty;
+
+        byte[] buffer = new byte[BufferSize];
         int bytesRead;
+
+        long nextReportAt = _reportInterval;
 
         while ((bytesRead = fs.Read(buffer, 0, BufferSize)) > 0)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             long positionBeforeThisRead = fs.Position - bytesRead;
             long chunkStartPosition = positionBeforeThisRead - Encoding.UTF8.GetByteCount(lastIncompleteChunk);
-
-            ConsoleProgressReporter.DrawReport(file, overallBytesProcessed + fs.Position, totalBytesAllFiles, fs.Position, currentFileLength);
 
             ReadOnlySpan<char> chunk = Encoding.UTF8.GetString(buffer, 0, bytesRead).AsSpan();
 
@@ -95,105 +98,111 @@ public class ProfanityScanner(IAntiProfanityService antiProfanityService, StateS
             string testableChunk = string.Concat(lastIncompleteChunk, chunk[..(lastSpaceIndex + 1)]);
             lastIncompleteChunk = chunk[lastSpaceIndex..].ToString();
 
-            await ProcessChunkAsync(
+            ReadOnlyCollection<ProfanityOccurrence> occurrences = await antiProfanityService.DetectAsync(testableChunk);
+
+            await syncLock.WaitAsync(cancellationToken);
+            try
+            {
+                foreach (ProfanityOccurrence occurrence in occurrences)
+                {
+                    string profanityInText = testableChunk.Substring(occurrence.Index, occurrence.Length);
+                    long absolutePosition = chunkStartPosition + Encoding.UTF8.GetByteCount(testableChunk[..occurrence.Index]);
+
+                    Dictionary<string, Detection> fileDetection =
+                        UpsertDetection(detections, profanityInText, file, absolutePosition, occurrence.Details);
+                    await detectionsStore.SaveAsync(profanityInText, fileDetection);
+                }
+
+                currentFileStatus = UpsertFileStatus(state, currentFileStatus, file, fs.Position, lastIncompleteChunk);
+                await stateStore.SaveAsync(state);
+            }
+            finally
+            {
+                syncLock.Release();
+            }
+
+            long totalBytesProcessedSoFar = progressTracker.AddProcessedBytes(bytesRead);
+            if (totalBytesProcessedSoFar < nextReportAt)
+                continue;
+
+            ConsoleProgressReporter.DrawReport(
                 file,
-                testableChunk,
-                chunkStartPosition,
-                confirmedDetectionsFilePath,
-                confirmedDetectionsStream,
-                wrongDetectionsStream,
-                overallBytesProcessed,
-                totalBytesAllFiles,
-                fs,
+                totalBytesProcessedSoFar,
+                progressTracker.TotalBytesAllFiles,
+                fs.Position,
                 currentFileLength
             );
 
-            currentFileStatus = UpsertFileStatus(state, file, currentFileStatus, fs.Position, lastIncompleteChunk);
-
-            await stateStore.SaveAsync(state);
+            while (totalBytesProcessedSoFar >= nextReportAt)
+                nextReportAt += _reportInterval;
         }
+
+        long finalTotalBytesProcessed = progressTracker.AddProcessedBytes(0);
+        ConsoleProgressReporter.CompleteFile(
+            file,
+            finalTotalBytesProcessed,
+            progressTracker.TotalBytesAllFiles,
+            currentFileLength
+        );
     }
 
-    private async Task ProcessChunkAsync(
+    private static Dictionary<string, Detection> UpsertDetection(
+        Detections detections,
+        string profanity,
         string file,
-        string testableChunk,
-        long chunkStartPosition,
-        string confirmedDetectionsFilePath,
-        Stream confirmedDetectionsStream,
-        Stream wrongDetectionsStream,
-        long overallBytesProcessed,
-        long totalBytesAllFiles,
-        FileStream fs,
-        long currentFileLength)
+        long position,
+        object? metadata)
     {
-        ReadOnlyCollection<ProfanityOccurrence> detections = await antiProfanityService.DetectAsync(testableChunk);
-
-        foreach (ProfanityOccurrence detection in detections)
+        if (!detections.Profanities.TryGetValue(profanity, out Dictionary<string, Detection>? fileDetections))
         {
-            string profanityInText = testableChunk.Substring(detection.Index, detection.Length);
-            (int Start, int End) smallChunkBoundaries =
-                TextChunkHelper.GetSmallChunkBoundaries(testableChunk, detection, ContextPaddingSize);
-            ReadOnlySpan<char> smallChunk = testableChunk.AsSpan()
-                .Slice(smallChunkBoundaries.Start, smallChunkBoundaries.End - smallChunkBoundaries.Start);
-
-            long absolutePosition = chunkStartPosition + Encoding.UTF8.GetByteCount(testableChunk[..detection.Index]);
-
-            ConsoleProgressReporter.DrawReport(file, overallBytesProcessed + fs.Position, totalBytesAllFiles, fs.Position, currentFileLength);
-
-            if (File.ReadLines(confirmedDetectionsFilePath).Any(line => line == $"detected={profanityInText}"))
-                continue;
-
-            if (ProfanityConfirmationPrompt.Ask(detection, smallChunk, smallChunkBoundaries.Start))
-            {
-                string confirmedLine =
-                    $"source={file}\n" +
-                    $"position={absolutePosition}\n" +
-                    $"detected={profanityInText}\n\n";
-
-                await confirmedDetectionsStream.WriteAsync(Encoding.UTF8.GetBytes(confirmedLine));
-                await confirmedDetectionsStream.FlushAsync();
-            }
-            else
-            {
-                string metadata = detection.Details is not null
-                    ? $"\n{JsonSerializer.Serialize(detection.Details, JsonOptions)}\n\n"
-                    : "none\n\n";
-
-                string wrongLine =
-                    $"source={file}\n" +
-                    $"position={absolutePosition}\n" +
-                    $"detected={profanityInText}\n" +
-                    $"metadata={metadata}";
-
-                await wrongDetectionsStream.WriteAsync(Encoding.UTF8.GetBytes(wrongLine));
-                await wrongDetectionsStream.FlushAsync();
-            }
+            fileDetections = [];
+            detections.Profanities.Add(profanity, fileDetections);
         }
+
+        if (!fileDetections.TryGetValue(file, out Detection? detection))
+        {
+            detection = new Detection
+            {
+                AbsolutePositions = [position],
+                Metadata = metadata
+            };
+
+            fileDetections.Add(file, detection);
+        }
+        else
+        {
+            detection.AbsolutePositions.Add(position);
+            detection.Metadata = metadata;
+        }
+
+        return fileDetections;
     }
 
     private static FileStatus UpsertFileStatus(
         State state,
-        string file,
         FileStatus? currentFileStatus,
+        string file,
         long position,
         string lastIncompleteChunk)
     {
         if (currentFileStatus is null)
         {
-            currentFileStatus = new FileStatus
-            {
-                Position = position,
-                LastIncompleteChunk = lastIncompleteChunk
-            };
-
+            currentFileStatus = new FileStatus();
             state.Statuses.Add(file, currentFileStatus);
         }
-        else
-        {
-            currentFileStatus.Position = position;
-            currentFileStatus.LastIncompleteChunk = lastIncompleteChunk;
-        }
+
+        currentFileStatus.Position = position;
+        currentFileStatus.LastIncompleteChunk = lastIncompleteChunk;
 
         return currentFileStatus;
+    }
+
+    private sealed class ProgressTracker(long totalBytesAllFiles, long initialBytesProcessed)
+    {
+        public long TotalBytesAllFiles { get; } = totalBytesAllFiles;
+
+        private long _totalBytesProcessed = initialBytesProcessed;
+
+        public long AddProcessedBytes(long bytes) => Interlocked.Add(ref _totalBytesProcessed, bytes);
     }
 }
