@@ -11,29 +11,16 @@ public static class CommandLineArgsParser
             string arg = commandLineArgs[i];
 
             if (arg.StartsWith("--parallel=", StringComparison.OrdinalIgnoreCase))
-                return PrintDegreeOfParallelism(
-                    TryParsePositiveInt(arg["--parallel=".Length..], defaultValue));
+                return TryParsePositiveInt(arg["--parallel=".Length..], defaultValue);
 
             bool isNamedFlag = arg.Equals("--parallel", StringComparison.OrdinalIgnoreCase)
                                || arg.Equals("-p", StringComparison.OrdinalIgnoreCase);
 
             if (isNamedFlag && i + 1 < commandLineArgs.Length)
-                return PrintDegreeOfParallelism(
-                    TryParsePositiveInt(commandLineArgs[i + 1], defaultValue));
+                return TryParsePositiveInt(commandLineArgs[i + 1], defaultValue);
         }
 
-        return PrintDegreeOfParallelism(defaultValue);
-    }
-
-    private static int PrintDegreeOfParallelism(int degreeOfParallelism)
-    {
-        Console.Write("Running with a degree of parallelism of ");
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write(degreeOfParallelism);
-        Console.ResetColor();
-        Console.WriteLine('.');
-
-        return degreeOfParallelism;
+        return defaultValue;
     }
 
     private static int TryParsePositiveInt(string text, int defaultValue)

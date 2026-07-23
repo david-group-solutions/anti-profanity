@@ -18,7 +18,6 @@
   <ItemGroup>
     <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest"/>
     <None Update="DataSources\**" CopyToOutputDirectory="PreserveNewest"/>
-    <None Update="Input\**" CopyToOutputDirectory="PreserveNewest"/>
   </ItemGroup>
 
 </Project>

@@ -72,7 +72,8 @@ public static class ConsoleProgressReporter
 
     private static void Render(long overallDone, long overallTotal, int barWidth)
     {
-        ConsoleHelpers.ClearConsole(0, 2);
+        ConsoleHelpers.TryClearConsole();
+        ConsoleArgumentsInfoReporter.PrintDegreeOfParallelism();
 
         double overallRatio = overallTotal <= 0 ? 1 : Math.Clamp(overallDone / (double)overallTotal, 0, 1);
 
@@ -158,22 +159,28 @@ public static class ConsoleProgressReporter
         Console.Write(" bytes)");
 
         if (status is not null)
-        {
-            Console.Write("  ");
-            WriteStatusTag(status.Value);
-        }
+            WriteRightAlignedStatus(status.Value);
 
         Console.WriteLine();
     }
 
-    private static void WriteStatusTag(FileState status)
+    private static void WriteRightAlignedStatus(FileState status)
     {
+        const int rightPadding = 2;
+
         (string text, ConsoleColor color) = status switch
         {
             FileState.Completed => ("[done]", ConsoleColor.DarkGreen),
             FileState.Processing => ("[processing]", ConsoleColor.Cyan),
             _ => (string.Empty, ConsoleColor.Gray)
         };
+
+        int left = Console.WindowWidth - text.Length - rightPadding;
+
+        if (Console.CursorLeft < left)
+            Console.SetCursorPosition(left, Console.CursorTop);
+        else
+            Console.Write("  ");
 
         Console.ForegroundColor = color;
         Console.Write(text);

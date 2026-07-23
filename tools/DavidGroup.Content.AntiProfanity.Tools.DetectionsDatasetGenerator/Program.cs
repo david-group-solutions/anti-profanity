@@ -25,7 +25,7 @@ IServiceProvider serviceProvider = services.BuildServiceProvider();
 await serviceProvider.InitializeAntiProfanityDataSourcesAsync();
 
 string projectDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
-string inputDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Input");
+string inputDirectory = Path.Combine(projectDirectory, "Input");
 string outputDirectory = Path.Combine(projectDirectory, "Output");
 string detectionsDirectory = Path.Combine(outputDirectory, "Detections");
 
@@ -39,8 +39,10 @@ DetectionsStore detectionsStore = new(detectionsDirectory, ToolJsonOptions.Write
 StateStore stateStore = new(stateFilePath, ToolJsonOptions.WriteIntendedJsonOptions);
 ProfanityScanner scanner = new(antiProfanityService, detectionsStore, stateStore);
 
-ConsoleHelpers.TryClearConsole();
 int degreeOfParallelism = CommandLineArgsParser.ParseDegreeOfParallelism(args);
+
+ConsoleHelpers.TryClearConsole();
+ConsoleArgumentsInfoReporter.PrintDegreeOfParallelism(degreeOfParallelism);
 
 CancellationTokenSource cts = new();
 Console.CancelKeyPress += (_, e) =>
