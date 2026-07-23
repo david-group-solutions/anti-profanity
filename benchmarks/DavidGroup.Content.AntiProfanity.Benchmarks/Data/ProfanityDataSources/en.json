@@ -792,20 +792,6 @@
     "severity": 3
   },
   {
-    "id": "christ",
-    "match": "chri*st",
-    "tags": [
-      "religious"
-    ],
-    "severity": 1,
-    "exceptions": [
-      "*en",
-      "*ian",
-      "*ie",
-      "*y"
-    ]
-  },
-  {
     "id": "cialis",
     "match": "cialis",
     "tags": [
@@ -1205,7 +1191,11 @@
     "tags": [
       "sexual"
     ],
-    "severity": 3
+    "severity": 3,
+    "exceptions": [
+      "cum-laude",
+      "cum laude"
+    ]
   },
   {
     "id": "cumming",
@@ -1397,14 +1387,6 @@
   {
     "id": "dolcett",
     "match": "dolcett",
-    "tags": [
-      "sexual"
-    ],
-    "severity": 3
-  },
-  {
-    "id": "domination",
-    "match": "domination",
     "tags": [
       "sexual"
     ],
@@ -1643,7 +1625,7 @@
   },
   {
     "id": "fingering",
-    "match": "fingering|fingered",
+    "match": "fingering",
     "tags": [
       "sexual"
     ],
@@ -1659,7 +1641,7 @@
   },
   {
     "id": "fisting",
-    "match": "fisting|fisted",
+    "match": "fisting",
     "tags": [
       "sexual"
     ],
@@ -2172,25 +2154,6 @@
       "sexual"
     ],
     "severity": 3
-  },
-  {
-    "id": "jesus",
-    "match": "je*su*s",
-    "tags": [
-      "religious"
-    ],
-    "severity": 1,
-    "exceptions": [
-      "be*"
-    ]
-  },
-  {
-    "id": "jesus-christ",
-    "match": "je*su*s chri*st",
-    "tags": [
-      "religious"
-    ],
-    "severity": 2
   },
   {
     "id": "jigaboo",
@@ -2761,7 +2724,7 @@
     "tags": [
       "sexual"
     ],
-    "severity": 3
+    "severity": 1
   },
   {
     "id": "parthenophilia",
@@ -3457,14 +3420,6 @@
     "severity": 3
   },
   {
-    "id": "snatch",
-    "match": "snatch",
-    "tags": [
-      "sexual"
-    ],
-    "severity": 1
-  },
-  {
     "id": "snowballing",
     "match": "snowballing",
     "tags": [
@@ -3776,7 +3731,7 @@
     "tags": [
       "sexual"
     ],
-    "severity": 3
+    "severity": 1
   },
   {
     "id": "tosser",
