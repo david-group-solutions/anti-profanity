@@ -3,7 +3,9 @@ using System.Text;
 
 using DavidGroup.Content.AntiProfanity.Models;
 using DavidGroup.Content.AntiProfanity.Services;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Helpers;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Models;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Options;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services.Stores;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.UI;
 
@@ -23,17 +25,18 @@ public class ProfanityScanner(
     private long _reportInterval;
 
     public async Task RunAsync(
-        string inputDirectory,
-        IReadOnlyList<string> files,
-        int degreeOfParallelism,
+        ApplicationOptions options,
         CancellationToken cancellationToken)
     {
-        _reportInterval = 100_000L * degreeOfParallelism;
+        _reportInterval = 100_000L * options.Parallel;
 
-        Detections detections = await detectionsStore.LoadAsync();
-        State state = await stateStore.LoadAsync();
+        string resolvedInputDirectory = PathHelpers.ResolveHomeDirectory(options.InputDir);
+        string[] files = Directory.GetFiles(resolvedInputDirectory, "*.txt", SearchOption.TopDirectoryOnly);
 
-        long totalBytesAllFiles = files.Sum(file => new FileInfo(Path.Combine(inputDirectory, file)).Length);
+        Detections detections = await detectionsStore.LoadAsync(options.ResetState);
+        State state = await stateStore.LoadAsync(options.ResetState);
+
+        long totalBytesAllFiles = files.Sum(file => new FileInfo(file).Length);
         long alreadyProcessedBytes = files.Sum(file =>
             state.Statuses.TryGetValue(file, out FileStatus? status) ? status.Position : 0);
 
@@ -42,33 +45,30 @@ public class ProfanityScanner(
 
         ParallelOptions parallelOptions = new()
         {
-            MaxDegreeOfParallelism = Math.Max(1, degreeOfParallelism),
+            MaxDegreeOfParallelism = Math.Max(1, options.Parallel),
             CancellationToken = cancellationToken
         };
 
         await Parallel.ForEachAsync(files, parallelOptions, async (file, ct) =>
         {
-            string inputPath = Path.Combine(inputDirectory, file);
+            if (!File.Exists(file))
+                throw new FileNotFoundException($"File '{file}' not found.");
 
-            if (!File.Exists(inputPath))
-                throw new FileNotFoundException($"File '{file}' not found in '{inputPath}'.");
-
-            await ScanFileAsync(file, inputPath, detections, state, progressTracker, syncLock, ct);
+            await ScanFileAsync(file, detections, state, progressTracker, syncLock, ct);
         });
     }
 
     private async Task ScanFileAsync(
         string file,
-        string inputPath,
         Detections detections,
         State state,
         ProgressTracker progressTracker,
         SemaphoreSlim syncLock,
         CancellationToken cancellationToken)
     {
-        long currentFileLength = new FileInfo(inputPath).Length;
+        long currentFileLength = new FileInfo(file).Length;
 
-        await using FileStream fs = new(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        await using FileStream fs = new(file, FileMode.Open, FileAccess.Read, FileShare.Read);
 
         FileStatus? currentFileStatus = state.Statuses.GetValueOrDefault(file);
         fs.Position = currentFileStatus?.Position ?? 0;
@@ -126,7 +126,7 @@ public class ProfanityScanner(
                 continue;
 
             ConsoleProgressReporter.DrawReport(
-                file,
+                Path.GetFileName(file),
                 totalBytesProcessedSoFar,
                 progressTracker.TotalBytesAllFiles,
                 fs.Position,
@@ -139,7 +139,7 @@ public class ProfanityScanner(
 
         long finalTotalBytesProcessed = progressTracker.AddProcessedBytes(0);
         ConsoleProgressReporter.CompleteFile(
-            file,
+            Path.GetFileName(file),
             finalTotalBytesProcessed,
             progressTracker.TotalBytesAllFiles,
             currentFileLength

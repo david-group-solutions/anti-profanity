@@ -73,7 +73,6 @@ public static class ConsoleProgressReporter
     private static void Render(long overallDone, long overallTotal, int barWidth)
     {
         ConsoleHelpers.TryClearConsole();
-        ConsoleArgumentsInfoReporter.PrintDegreeOfParallelism();
 
         double overallRatio = overallTotal <= 0 ? 1 : Math.Clamp(overallDone / (double)overallTotal, 0, 1);
 

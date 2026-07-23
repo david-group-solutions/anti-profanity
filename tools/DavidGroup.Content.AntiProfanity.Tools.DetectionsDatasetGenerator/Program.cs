@@ -1,48 +1,29 @@
-﻿using DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
+﻿using CommandLine;
+
+using DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 using DavidGroup.Content.AntiProfanity.Extensions;
 using DavidGroup.Content.AntiProfanity.Services;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Helpers;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Options;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services.Stores;
-using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.UI;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 ServiceCollection services = new();
+
 IConfiguration configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
     .Build();
-
-string[] files = configuration.GetSection("Input").Get<string[]>()
-                 ?? throw new Exception("Input files config not found.");
 
 services.AddAntiProfanity(configuration)
     .AddHandler<ProfanityDetectionJsonHandler>()
     .AddHandler<ProfanityDetectionTxtHandler>();
 
 IServiceProvider serviceProvider = services.BuildServiceProvider();
+
 await serviceProvider.InitializeAntiProfanityDataSourcesAsync();
-
-string projectDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
-string inputDirectory = Path.Combine(projectDirectory, "Input");
-string outputDirectory = Path.Combine(projectDirectory, "Output");
-string detectionsDirectory = Path.Combine(outputDirectory, "Detections");
-
-Directory.CreateDirectory(outputDirectory);
-Directory.CreateDirectory(detectionsDirectory);
-
-string stateFilePath = Path.Combine(outputDirectory, "state.json");
-
-IAntiProfanityService antiProfanityService = serviceProvider.GetRequiredService<IAntiProfanityService>();
-DetectionsStore detectionsStore = new(detectionsDirectory, ToolJsonOptions.WriteIntendedJsonOptions);
-StateStore stateStore = new(stateFilePath, ToolJsonOptions.WriteIntendedJsonOptions);
-ProfanityScanner scanner = new(antiProfanityService, detectionsStore, stateStore);
-
-int degreeOfParallelism = CommandLineArgsParser.ParseDegreeOfParallelism(args);
-
-ConsoleHelpers.TryClearConsole();
-ConsoleArgumentsInfoReporter.PrintDegreeOfParallelism(degreeOfParallelism);
 
 CancellationTokenSource cts = new();
 Console.CancelKeyPress += (_, e) =>
@@ -53,15 +34,37 @@ Console.CancelKeyPress += (_, e) =>
     Console.WriteLine("Cancellation requested...");
 };
 
-try
-{
-    await scanner.RunAsync(inputDirectory, files, degreeOfParallelism, cts.Token);
-}
-catch (OperationCanceledException)
-{
-    Console.WriteLine("Operation cancelled.");
-}
-catch (AggregateException ex) when (ex.InnerExceptions.All(e => e is OperationCanceledException))
-{
-    Console.WriteLine("Operation cancelled.");
-}
+ParserResult<ApplicationOptions> result =
+    Parser.Default.ParseArguments<ApplicationOptions>(args);
+
+return await result.MapResult(
+    async options =>
+    {
+        try
+        {
+            string resolveOutputDirectory = PathHelpers.ResolveHomeDirectory(options.OutputDir);
+
+            IAntiProfanityService antiProfanityService = serviceProvider.GetRequiredService<IAntiProfanityService>();
+
+            DetectionsStore detectionsStore = new(resolveOutputDirectory, ToolJsonOptions.WriteIntendedJsonOptions);
+            StateStore stateStore = new(resolveOutputDirectory, ToolJsonOptions.WriteIntendedJsonOptions);
+
+            ProfanityScanner scanner = new(antiProfanityService, detectionsStore, stateStore);
+
+            await scanner.RunAsync(options, cts.Token);
+
+            return 0;
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine("Operation cancelled.");
+            return 1;
+        }
+        catch (AggregateException ex) when (ex.InnerExceptions.All(e => e is OperationCanceledException))
+        {
+            Console.WriteLine("Operation cancelled.");
+            return 1;
+        }
+    },
+    _ => Task.FromResult(1)
+);
