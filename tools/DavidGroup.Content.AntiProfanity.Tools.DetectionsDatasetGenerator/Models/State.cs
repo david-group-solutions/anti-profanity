@@ -1,8 +1,14 @@
+using System.Collections.Concurrent;
+
 namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Models;
 
 public class State
 {
-    public Dictionary<string, FileStatus> Statuses { get; set; } = [];
+    // Key = file name
+    public ConcurrentDictionary<string, FileStatus> Statuses { get; init; } = [];
+
+    public FileStatus GetFileStatus(string file) =>
+        Statuses.GetOrAdd(file, _ => new FileStatus());
 }
 
 public class FileStatus

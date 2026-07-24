@@ -1,4 +1,4 @@
-namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Helpers;
+namespace DavidGroup.Content.AntiProfanity.Tools.Shared.Helpers;
 
 public static class PathHelpers
 {

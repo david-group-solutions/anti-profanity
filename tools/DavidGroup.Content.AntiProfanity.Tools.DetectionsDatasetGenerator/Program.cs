@@ -3,10 +3,10 @@
 using DavidGroup.Content.AntiProfanity.DetectionHandlers.Implementations;
 using DavidGroup.Content.AntiProfanity.Extensions;
 using DavidGroup.Content.AntiProfanity.Services;
-using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Helpers;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Options;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services;
-using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services.Stores;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Stores;
+using DavidGroup.Content.AntiProfanity.Tools.Shared.Helpers;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,8 +46,8 @@ return await result.MapResult(
 
             IAntiProfanityService antiProfanityService = serviceProvider.GetRequiredService<IAntiProfanityService>();
 
-            DetectionsStore detectionsStore = new(resolveOutputDirectory, ToolJsonOptions.WriteIntendedJsonOptions);
-            StateStore stateStore = new(resolveOutputDirectory, ToolJsonOptions.WriteIntendedJsonOptions);
+            DetectionsStore detectionsStore = new(resolveOutputDirectory, ToolJsonOptions.WriteIndentedJsonOptions);
+            StateStore stateStore = new(resolveOutputDirectory, ToolJsonOptions.WriteIndentedJsonOptions);
 
             ProfanityScanner scanner = new(antiProfanityService, detectionsStore, stateStore);
 

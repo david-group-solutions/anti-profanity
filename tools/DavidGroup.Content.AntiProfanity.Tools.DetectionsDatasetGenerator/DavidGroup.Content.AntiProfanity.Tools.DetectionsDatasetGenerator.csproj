@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DavidGroup.Content.AntiProfanity\DavidGroup.Content.AntiProfanity.csproj"/>
+    <ProjectReference Include="..\DavidGroup.Content.AntiProfanity.Tools.Shared\DavidGroup.Content.AntiProfanity.Tools.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

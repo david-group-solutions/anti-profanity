@@ -3,11 +3,11 @@ using System.Text;
 
 using DavidGroup.Content.AntiProfanity.Models;
 using DavidGroup.Content.AntiProfanity.Services;
-using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Helpers;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Models;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Options;
-using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services.Stores;
+using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Stores;
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.UI;
+using DavidGroup.Content.AntiProfanity.Tools.Shared.Helpers;
 
 namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services;
 
@@ -33,7 +33,8 @@ public class ProfanityScanner(
         string resolvedInputDirectory = PathHelpers.ResolveHomeDirectory(options.InputDir);
         string[] files = Directory.GetFiles(resolvedInputDirectory, "*.txt", SearchOption.TopDirectoryOnly);
 
-        Detections detections = await detectionsStore.LoadAsync(options.ResetState);
+        if (options.ResetState)
+            await detectionsStore.ResetStateAsync();
         State state = await stateStore.LoadAsync(options.ResetState);
 
         long totalBytesAllFiles = files.Sum(file => new FileInfo(file).Length);
@@ -54,25 +55,23 @@ public class ProfanityScanner(
             if (!File.Exists(file))
                 throw new FileNotFoundException($"File '{file}' not found.");
 
-            await ScanFileAsync(file, detections, state, progressTracker, syncLock, ct);
+            await ScanFileAsync(file, state, progressTracker, syncLock, ct);
         });
     }
 
     private async Task ScanFileAsync(
         string file,
-        Detections detections,
         State state,
         ProgressTracker progressTracker,
         SemaphoreSlim syncLock,
         CancellationToken cancellationToken)
     {
+        FileStatus currentFileStatus = state.GetFileStatus(file);
+        string lastIncompleteChunk = currentFileStatus.LastIncompleteChunk;
         long currentFileLength = new FileInfo(file).Length;
 
         await using FileStream fs = new(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-
-        FileStatus? currentFileStatus = state.Statuses.GetValueOrDefault(file);
-        fs.Position = currentFileStatus?.Position ?? 0;
-        string lastIncompleteChunk = currentFileStatus?.LastIncompleteChunk ?? string.Empty;
+        fs.Position = currentFileStatus.Position;
 
         byte[] buffer = new byte[BufferSize];
         int bytesRead;
@@ -105,15 +104,13 @@ public class ProfanityScanner(
             {
                 foreach (ProfanityOccurrence occurrence in occurrences)
                 {
-                    string profanityInText = testableChunk.Substring(occurrence.Index, occurrence.Length);
                     long absolutePosition = chunkStartPosition + Encoding.UTF8.GetByteCount(testableChunk[..occurrence.Index]);
 
-                    Dictionary<string, Detection> fileDetection =
-                        UpsertDetection(detections, profanityInText, file, absolutePosition, occurrence.Details);
-                    await detectionsStore.SaveAsync(profanityInText, fileDetection);
+                    await detectionsStore.AddAsync(occurrence.Profanity, file, absolutePosition, occurrence.Length);
                 }
 
-                currentFileStatus = UpsertFileStatus(state, currentFileStatus, file, fs.Position, lastIncompleteChunk);
+                currentFileStatus.Position = fs.Position;
+                currentFileStatus.LastIncompleteChunk = lastIncompleteChunk;
                 await stateStore.SaveAsync(state);
             }
             finally
@@ -144,57 +141,6 @@ public class ProfanityScanner(
             progressTracker.TotalBytesAllFiles,
             currentFileLength
         );
-    }
-
-    private static Dictionary<string, Detection> UpsertDetection(
-        Detections detections,
-        string profanity,
-        string file,
-        long position,
-        object? metadata)
-    {
-        if (!detections.Profanities.TryGetValue(profanity, out Dictionary<string, Detection>? fileDetections))
-        {
-            fileDetections = [];
-            detections.Profanities.Add(profanity, fileDetections);
-        }
-
-        if (!fileDetections.TryGetValue(file, out Detection? detection))
-        {
-            detection = new Detection
-            {
-                AbsolutePositions = [position],
-                Metadata = metadata
-            };
-
-            fileDetections.Add(file, detection);
-        }
-        else
-        {
-            detection.AbsolutePositions.Add(position);
-            detection.Metadata = metadata;
-        }
-
-        return fileDetections;
-    }
-
-    private static FileStatus UpsertFileStatus(
-        State state,
-        FileStatus? currentFileStatus,
-        string file,
-        long position,
-        string lastIncompleteChunk)
-    {
-        if (currentFileStatus is null)
-        {
-            currentFileStatus = new FileStatus();
-            state.Statuses.Add(file, currentFileStatus);
-        }
-
-        currentFileStatus.Position = position;
-        currentFileStatus.LastIncompleteChunk = lastIncompleteChunk;
-
-        return currentFileStatus;
     }
 
     private sealed class ProgressTracker(long totalBytesAllFiles, long initialBytesProcessed)

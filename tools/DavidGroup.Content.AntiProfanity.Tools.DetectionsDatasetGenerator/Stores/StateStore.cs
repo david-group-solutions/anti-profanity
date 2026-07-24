@@ -2,7 +2,7 @@ using System.Text.Json;
 
 using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Models;
 
-namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Services.Stores;
+namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Stores;
 
 /// <summary>
 /// Loads and persists the scan <see cref="State"/> to disk as JSON, so a run can resume
@@ -24,7 +24,6 @@ public class StateStore(string outputDirectory, JsonSerializerOptions jsonOption
         }
 
         await using FileStream stream = new(StateFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        stream.Seek(0, SeekOrigin.Begin);
 
         return await JsonSerializer.DeserializeAsync<State>(stream, jsonOptions)
                ?? throw new NullReferenceException($"Failed to deserialize state from file {StateFilePath}.");

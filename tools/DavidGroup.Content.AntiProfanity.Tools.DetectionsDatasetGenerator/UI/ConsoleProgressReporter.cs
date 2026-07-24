@@ -1,4 +1,4 @@
-using DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Helpers;
+using DavidGroup.Content.AntiProfanity.Tools.Shared.Helpers;
 
 namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.UI;
 
