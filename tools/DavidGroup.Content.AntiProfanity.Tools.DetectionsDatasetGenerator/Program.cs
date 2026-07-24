@@ -46,7 +46,7 @@ return await result.MapResult(
 
             IAntiProfanityService antiProfanityService = serviceProvider.GetRequiredService<IAntiProfanityService>();
 
-            DetectionsStore detectionsStore = new(resolveOutputDirectory, ToolJsonOptions.WriteIndentedJsonOptions);
+            DetectionsStore detectionsStore = new(resolveOutputDirectory);
             StateStore stateStore = new(resolveOutputDirectory, ToolJsonOptions.WriteIndentedJsonOptions);
 
             ProfanityScanner scanner = new(antiProfanityService, detectionsStore, stateStore);

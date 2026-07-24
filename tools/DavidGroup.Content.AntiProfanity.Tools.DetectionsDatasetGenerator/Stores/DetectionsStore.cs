@@ -10,17 +10,14 @@ namespace DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.Stor
 public class DetectionsStore : IAsyncDisposable
 {
     private readonly string _directory;
-    private readonly JsonSerializerOptions _jsonOptions;
 
     private readonly Dictionary<string, StreamWriter> _writers =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public DetectionsStore(string outputDirectory, JsonSerializerOptions jsonOptions)
+    public DetectionsStore(string outputDirectory)
     {
         _directory = Path.Combine(outputDirectory, "Detections");
         Directory.CreateDirectory(_directory);
-
-        _jsonOptions = jsonOptions;
     }
 
     public async Task ResetStateAsync()
@@ -49,7 +46,7 @@ public class DetectionsStore : IAsyncDisposable
             Length = length
         };
 
-        await writer.WriteLineAsync(JsonSerializer.Serialize(row, _jsonOptions));
+        await writer.WriteLineAsync(JsonSerializer.Serialize(row));
         await writer.FlushAsync();
     }
 
