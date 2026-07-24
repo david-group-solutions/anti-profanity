@@ -10,7 +10,7 @@
     <Authors>David Khachatryan; David Group Solutions</Authors>
     <Copyright>Copyright (c) 2025-2026 David Khachatryan (David Group Solutions)</Copyright>
 
-    <PackageId>DavidGroup.Core.AntiProfanity</PackageId>
+    <PackageId>DavidGroup.Content.AntiProfanity</PackageId>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
