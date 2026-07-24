@@ -23,6 +23,7 @@
     <Project Path="tests/DavidGroup.Content.AntiProfanity.Tests/DavidGroup.Content.AntiProfanity.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
+w    <Project Path="tools/DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetAssessment/DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetAssessment.csproj" />
     <Project Path="tools/DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator/DavidGroup.Content.AntiProfanity.Tools.DetectionsDatasetGenerator.csproj" />
     <Project Path="tools/DavidGroup.Content.AntiProfanity.Tools.Shared/DavidGroup.Content.AntiProfanity.Tools.Shared.csproj" />
   </Folder>

@@ -1,6 +1,6 @@
 namespace DavidGroup.Content.AntiProfanity.Tools.Shared.Models;
 
-public sealed class DetectionRow
+public class DetectionRow
 {
     public required string FileName { get; init; }
 
