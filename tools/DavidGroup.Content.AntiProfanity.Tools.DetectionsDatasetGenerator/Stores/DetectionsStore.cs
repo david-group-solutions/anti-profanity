@@ -33,7 +33,7 @@ public class DetectionsStore : IAsyncDisposable
 
     public async ValueTask AddAsync(
         string profanity,
-        string file,
+        string fileName,
         long position,
         int length)
     {
@@ -41,7 +41,7 @@ public class DetectionsStore : IAsyncDisposable
 
         DetectionRow row = new()
         {
-            File = file,
+            FileName = fileName,
             Position = position,
             Length = length
         };

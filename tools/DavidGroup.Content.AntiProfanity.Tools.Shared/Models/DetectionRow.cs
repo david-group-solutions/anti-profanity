@@ -2,7 +2,7 @@ namespace DavidGroup.Content.AntiProfanity.Tools.Shared.Models;
 
 public sealed class DetectionRow
 {
-    public required string File { get; init; }
+    public required string FileName { get; init; }
 
     public required long Position { get; init; }
 

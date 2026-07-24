@@ -105,8 +105,8 @@ public class ProfanityScanner(
                 foreach (ProfanityOccurrence occurrence in occurrences)
                 {
                     long absolutePosition = chunkStartPosition + Encoding.UTF8.GetByteCount(testableChunk[..occurrence.Index]);
-
-                    await detectionsStore.AddAsync(occurrence.Profanity, file, absolutePosition, occurrence.Length);
+                    string fileName = Path.GetFileName(file);
+                    await detectionsStore.AddAsync(occurrence.Profanity, fileName, absolutePosition, occurrence.Length);
                 }
 
                 currentFileStatus.Position = fs.Position;
