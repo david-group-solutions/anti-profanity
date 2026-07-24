@@ -86,7 +86,7 @@ jobs:
         shell: pwsh
         run: |
           dotnet run `
-            --project benchmarks/DavidGroup.Core.AntiProfanity.Benchmarks/DavidGroup.Core.AntiProfanity.Benchmarks.csproj `
+            --project benchmarks/DavidGroup.Content.AntiProfanity.Benchmarks/DavidGroup.Content.AntiProfanity.Benchmarks.csproj `
             --configuration Release `
             --no-build `
             -- `
