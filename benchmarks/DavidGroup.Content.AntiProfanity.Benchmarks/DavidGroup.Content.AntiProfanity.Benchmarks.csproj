@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.10"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DavidGroup.Content.AntiProfanity\DavidGroup.Content.AntiProfanity.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest"/>
+    <None Update="Data\ProfanityDataSources\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

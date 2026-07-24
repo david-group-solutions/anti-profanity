@@ -37,7 +37,7 @@ change-template: |
     
   
 template: |
-  # 🎉 DavidGroup.Core.AntiProfanity $RESOLVED_VERSION
+  # 🎉 DavidGroup.Content.AntiProfanity $RESOLVED_VERSION
 
   Detects profanity in text using predefined word lists in advanced JSON or simple TXT formats.
 

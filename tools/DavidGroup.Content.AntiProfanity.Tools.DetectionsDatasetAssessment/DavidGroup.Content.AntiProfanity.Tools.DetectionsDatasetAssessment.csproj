@@ -9,11 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <ProjectReference Include="..\DavidGroup.Content.AntiProfanity.Tools.Shared\DavidGroup.Content.AntiProfanity.Tools.Shared.csproj"/>
   </ItemGroup>
-
+  
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DavidGroup.Core.AntiProfanity\DavidGroup.Core.AntiProfanity.csproj"/>
+    <PackageReference Include="CommandLineParser" Version="2.9.1"/>
   </ItemGroup>
 
 </Project>
